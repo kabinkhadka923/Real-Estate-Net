@@ -14,23 +14,31 @@ class AdminSecurityMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        # Check if trying to access admin
-        if request.path.startswith('/admin/') and settings.ADMIN_RESTRICTED_ACCESS:
-            # Check IP address first
-            client_ip = self.get_client_ip(request)
-
-            if not self.is_ip_allowed(client_ip):
+        # Check if trying to access admin panels (both default and custom)
+        if request.path.startswith('/admin/') or request.path.startswith('/real-admin/'):
+            # If admin is entirely disabled, block all access
+            if not getattr(settings, 'ADMIN_ENABLED', True):
                 return HttpResponseForbidden(
-                    "<h1>🚫 Access Denied</h1>"
-                    "<p>Admin access is restricted to authorized IP addresses only.</p>"
-                    "<p>Your IP: {}</p>".format(client_ip)
+                    "<h1>🚫 Admin Access Disabled</h1>"
+                    "<p>The administrative interface has been disabled for security reasons.</p>"
+                    "<p><a href='/'>← Back to Homepage</a></p>"
                 )
+
+            # If admin is enabled but restricted, check IP address first
+            if settings.ADMIN_RESTRICTED_ACCESS:
+                client_ip = self.get_client_ip(request)
+                if not self.is_ip_allowed(client_ip):
+                    return HttpResponseForbidden(
+                        "<h1>🚫 Access Denied</h1>"
+                        "<p>Admin access is restricted to authorized IP addresses only.</p>"
+                        "<p>Your IP: {}</p>".format(client_ip)
+                    )
 
         # Process the request first to get user authentication
         response = self.get_response(request)
 
         # Check admin access after authentication middleware has run
-        if (request.path.startswith('/admin/') or request.path.startswith('/secure-admin/')) and settings.ADMIN_RESTRICTED_ACCESS:
+        if (request.path.startswith('/admin/') or request.path.startswith('/real-admin/') or request.path.startswith('/secure-admin/')) and settings.ADMIN_RESTRICTED_ACCESS:
             # Check if user is authenticated and is superuser
             if hasattr(request, 'user') and request.user.is_authenticated:
                 if not request.user.is_superuser:

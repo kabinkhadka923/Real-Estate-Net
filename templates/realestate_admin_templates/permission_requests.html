@@ -1,0 +1,296 @@
+{% extends "realestate_admin_templates/base_admin.html" %}
+{% load static %}
+
+{% block title %}Permission Requests - Super Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">Permission Requests</h1>
+            <p class="text-muted">Review and manage admin permission requests</p>
+        </div>
+        <div class="d-flex gap-2">
+            {% if total_pending > 0 %}
+                <span class="badge bg-danger fs-6">{{ total_pending }} Pending</span>
+            {% else %}
+                <span class="badge bg-success fs-6">All Clear</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Pending Requests -->
+    {% if pending_requests %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-warning">Pending Requests</h6>
+                    <span class="badge bg-warning">{{ pending_requests|length }}</span>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="pendingRequestsTable">
+                            <thead>
+                                <tr>
+                                    <th>Admin</th>
+                                    <th>Permission</th>
+                                    <th>Reason</th>
+                                    <th>Requested</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for request in pending_requests %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ request.requesting_admin.username }}</strong>
+                                        <br><small class="text-muted">{{ request.requesting_admin.get_full_name }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ request.get_permission_type_display }}</span>
+                                    </td>
+                                    <td>
+                                        <div style="max-width: 300px;">
+                                            <small class="text-muted">{{ request.reason|truncatechars:100 }}</small>
+                                            {% if request.reason|length > 100 %}
+                                            <br><a href="#" class="text-primary small" onclick="showFullReason({{ request.id }})">Read more...</a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>{{ request.requested_at|date:"M d, Y H:i" }}</td>
+                                    <td>
+                                        <form method="post" style="display: inline;" onsubmit="return confirm('Are you sure you want to approve this request?')">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="request_id" value="{{ request.id }}">
+                                            <input type="hidden" name="action" value="approve">
+                                            <button type="submit" class="btn btn-success btn-sm">
+                                                <i class="fas fa-check"></i> Approve
+                                            </button>
+                                        </form>
+                                        <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal"
+                                                data-bs-target="#rejectModal" data-request-id="{{ request.id }}"
+                                                data-admin="{{ request.requesting_admin.username }}"
+                                                data-permission="{{ request.get_permission_type_display }}">
+                                            <i class="fas fa-times"></i> Reject
+                                        </button>
+                                        <button type="button" class="btn btn-info btn-sm" onclick="showDetails({{ request.id }})">
+                                            <i class="fas fa-eye"></i> Details
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Recent Requests -->
+    {% if recent_requests %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Recent Requests</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="recentRequestsTable">
+                            <thead>
+                                <tr>
+                                    <th>Admin</th>
+                                    <th>Permission</th>
+                                    <th>Status</th>
+                                    <th>Reviewed By</th>
+                                    <th>Reviewed</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for request in recent_requests %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ request.requesting_admin.username }}</strong>
+                                        <br><small class="text-muted">{{ request.requesting_admin.get_full_name }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ request.get_permission_type_display }}</span>
+                                    </td>
+                                    <td>
+                                        {% if request.status == 'approved' %}
+                                            <span class="badge bg-success">Approved</span>
+                                        {% elif request.status == 'rejected' %}
+                                            <span class="badge bg-danger">Rejected</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">{{ request.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if request.reviewed_by %}
+                                            {{ request.reviewed_by.username }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ request.reviewed_at|date:"M d, Y H:i" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- No Requests -->
+    {% if not pending_requests and not recent_requests %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                    <h5 class="text-success">No Permission Requests</h5>
+                    <p class="text-muted">There are currently no permission requests to review.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Instructions -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-left-info">
+                <div class="card-body">
+                    <h6 class="card-title"><i class="fas fa-info-circle text-info"></i> Permission Request Guidelines</h6>
+                    <ul class="mb-0">
+                        <li><strong>Review Carefully:</strong> Evaluate each request based on the admin's role and responsibilities</li>
+                        <li><strong>Check Justification:</strong> Ensure the admin has provided adequate reasoning for the permission</li>
+                        <li><strong>Security First:</strong> Only grant permissions that are necessary for the admin's duties</li>
+                        <li><strong>Document Decisions:</strong> Provide clear reasons for approval or rejection</li>
+                        <li><strong>Monitor Usage:</strong> All permission changes are logged for security auditing</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reject Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="rejectModalLabel">Reject Permission Request</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="request_id" id="rejectRequestId">
+                <input type="hidden" name="action" value="reject">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <p>Are you sure you want to reject the permission request for <strong id="rejectAdmin"></strong>?</p>
+                        <p>Permission: <strong id="rejectPermission"></strong></p>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="review_notes" class="form-label">Reason for Rejection <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="review_notes" name="review_notes" rows="3" required
+                                  placeholder="Please provide a clear reason for rejecting this request"></textarea>
+                        <div class="form-text">This reason will be communicated to the requesting admin</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Reject Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Details Modal -->
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailsModalLabel">Permission Request Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="requestDetails">
+                    <!-- Details will be loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Initialize DataTables
+$(document).ready(function() {
+    $('#pendingRequestsTable').DataTable({
+        "pageLength": 10,
+        "ordering": true,
+        "searching": true,
+        "responsive": true,
+        "order": [[3, 'desc']], // Sort by requested date
+        "language": {
+            "search": "Search requests:",
+            "lengthMenu": "Show _MENU_ requests per page"
+        }
+    });
+
+    $('#recentRequestsTable').DataTable({
+        "pageLength": 10,
+        "ordering": true,
+        "searching": true,
+        "responsive": true,
+        "order": [[4, 'desc']], // Sort by reviewed date
+        "language": {
+            "search": "Search requests:",
+            "lengthMenu": "Show _MENU_ requests per page"
+        }
+    });
+});
+
+// Handle reject modal
+document.addEventListener('DOMContentLoaded', function() {
+    const rejectModal = document.getElementById('rejectModal');
+    rejectModal.addEventListener('show.bs.modal', function(event) {
+        const button = event.relatedTarget;
+        const requestId = button.getAttribute('data-request-id');
+        const admin = button.getAttribute('data-admin');
+        const permission = button.getAttribute('data-permission');
+
+        document.getElementById('rejectRequestId').value = requestId;
+        document.getElementById('rejectAdmin').textContent = admin;
+        document.getElementById('rejectPermission').textContent = permission;
+    });
+});
+
+// Show full reason
+function showFullReason(requestId) {
+    // This would typically make an AJAX call to get the full details
+    // For now, we'll just show an alert
+    alert('Full reason details would be shown here via AJAX call');
+}
+
+// Show request details
+function showDetails(requestId) {
+    // This would typically make an AJAX call to get the full request details
+    // For now, we'll just show an alert
+    alert('Full request details would be shown here via AJAX call');
+}
+</script>
+{% endblock %}

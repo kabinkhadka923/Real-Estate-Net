@@ -1,0 +1,202 @@
+{% extends "accounts/normal_admin/base.html" %}
+{% load static %}
+
+{% block title %}Reports - Normal Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">Admin Reports</h1>
+            <p class="text-muted">View activity reports and statistics</p>
+        </div>
+        <div class="text-end">
+            <small class="text-muted">Report Period: Last 30 Days</small>
+        </div>
+    </div>
+
+    <!-- Report Cards -->
+    <div class="row mb-4">
+        <!-- Properties Managed -->
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Properties Managed (30 Days)
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ reports.properties_managed }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-home fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inquiries Resolved -->
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Inquiries Resolved (30 Days)
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ reports.inquiries_resolved }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity Count -->
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Admin Activities (30 Days)
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ reports.activity_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity Log -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Recent Admin Activity</h6>
+                </div>
+                <div class="card-body">
+                    {% if recent_activity %}
+                        <div class="table-responsive">
+                            <table class="table table-bordered" id="activityTable">
+                                <thead>
+                                    <tr>
+                                        <th>Action</th>
+                                        <th>Description</th>
+                                        <th>Timestamp</th>
+                                        <th>Risk Level</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for activity in recent_activity %}
+                                    <tr>
+                                        <td>
+                                            <span class="badge bg-{% if activity.action_type == 'login' %}success{% elif activity.action_type == 'update' %}primary{% elif activity.action_type == 'approve' %}info{% elif activity.action_type == 'reject' %}warning{% else %}secondary{% endif %}">
+                                                {{ activity.get_action_type_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <strong>{{ activity.description|truncatechars:50 }}</strong>
+                                            {% if activity.target_model %}
+                                                <br><small class="text-muted">{{ activity.target_model }} #{{ activity.target_id }}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ activity.timestamp|date:"M d, Y H:i" }}</td>
+                                        <td>
+                                            {% if activity.is_high_risk %}
+                                                <span class="badge bg-danger">
+                                                    <i class="fas fa-exclamation-triangle"></i> High Risk
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-shield-alt"></i> Normal
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No Recent Activity</h5>
+                            <p class="text-muted">Your admin activities will appear here.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Summary -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-left-warning">
+                <div class="card-body">
+                    <h6 class="card-title"><i class="fas fa-chart-pie text-warning"></i> Report Summary</h6>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h5>Property Management</h5>
+                            <p>You have managed <strong>{{ reports.properties_managed }}</strong> properties in the last 30 days.</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h5>Inquiry Resolution</h5>
+                            <p>You have resolved <strong>{{ reports.inquiries_resolved }}</strong> customer inquiries in the last 30 days.</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h5>System Activity</h5>
+                            <p>You have performed <strong>{{ reports.activity_count }}</strong> admin actions in the last 30 days.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Instructions -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-left-info">
+                <div class="card-body">
+                    <h6 class="card-title"><i class="fas fa-info-circle text-info"></i> Understanding Your Reports</h6>
+                    <ul class="mb-0">
+                        <li><strong>Properties Managed:</strong> Properties you've created, approved, or modified</li>
+                        <li><strong>Inquiries Resolved:</strong> Customer inquiries you've marked as resolved</li>
+                        <li><strong>Admin Activities:</strong> All your logged admin actions (logins, updates, approvals, etc.)</li>
+                        <li><strong>Risk Levels:</strong> High-risk actions are flagged for security monitoring</li>
+                        <li>All your activities are tracked for Super Admin oversight and security</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Initialize DataTable
+$(document).ready(function() {
+    $('#activityTable').DataTable({
+        "pageLength": 10,
+        "ordering": true,
+        "searching": true,
+        "responsive": true,
+        "order": [[ 2, "desc" ]], // Sort by timestamp descending
+        "language": {
+            "search": "Search activities:",
+            "lengthMenu": "Show _MENU_ activities per page",
+            "info": "Showing _START_ to _END_ of _TOTAL_ activities"
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,561 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Real Estate Agent Application - {{ site_name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/register.css' %}">
+<style>
+.agent-application-container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.application-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 30px;
+    text-align: center;
+}
+
+.application-header h2 {
+    margin-bottom: 10px;
+    font-size: 2em;
+}
+
+.application-form-container {
+    padding: 40px;
+}
+
+.application-steps {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+}
+
+.step {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.step-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: white;
+    margin-right: 15px;
+}
+
+.step.active .step-circle {
+    background: #28a745;
+}
+
+.step.completed .step-circle {
+    background: #007bff;
+}
+
+.step.pending .step-circle {
+    background: #6c757d;
+}
+
+.step.completed .step-text,
+.step.active .step-text {
+    color: #007bff;
+    font-weight: 500;
+}
+
+.section-divider {
+    margin: 40px 0 20px 0;
+    padding: 20px 0;
+    border-top: 2px solid #f8f9fa;
+}
+
+.section-header h3 {
+    color: #333;
+    margin-bottom: 5px;
+    font-size: 1.3em;
+}
+
+.section-header p {
+    color: #666;
+    font-size: 0.9em;
+    margin: 0;
+}
+
+.requirements-list {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.requirements-list h4 {
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.requirements-list ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.requirements-list li {
+    margin-bottom: 5px;
+    color: #555;
+}
+
+.file-upload-area {
+    border: 2px dashed #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    margin: 10px 0;
+    transition: all 0.3s ease;
+}
+
+.file-upload-area:hover {
+    border-color: #007bff;
+    background-color: #f8f9ff;
+}
+
+.file-upload-area.drag-over {
+    border-color: #28a745;
+    background-color: #f8fff8;
+}
+
+.agreement-section {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.agreement-section h4 {
+    color: #856404;
+    margin-bottom: 10px;
+}
+
+.form-actions {
+    text-align: center;
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.submit-btn {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    border: none;
+    padding: 15px 40px;
+    border-radius: 8px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+.back-btn {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 8px;
+    font-size: 1em;
+    cursor: pointer;
+    margin-right: 15px;
+    transition: all 0.3s ease;
+}
+
+.back-btn:hover {
+    background: #5a6268;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.form-row.full-width {
+    grid-template-columns: 1fr;
+}
+
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .agent-application-container {
+        margin: 10px;
+        border-radius: 10px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="agent-application-container">
+    <div class="application-header">
+        <h2>📋 Real Estate Agent Application</h2>
+        <p>Complete your application to become a verified real estate agent</p>
+    </div>
+
+    <div class="application-steps">
+        <div class="step active">
+            <div class="step-circle">1</div>
+            <div class="step-text">
+                <strong>Registration Complete</strong><br>
+                <small>Account created successfully</small>
+            </div>
+        </div>
+        <div class="step active">
+            <div class="step-circle">2</div>
+            <div class="step-text">
+                <strong>Submit Application</strong><br>
+                <small>Provide your professional details</small>
+            </div>
+        </div>
+        <div class="step pending">
+            <div class="step-circle">3</div>
+            <div class="step-text">
+                <strong>Admin Review</strong><br>
+                <small>Application under review</small>
+            </div>
+        </div>
+        <div class="step pending">
+            <div class="step-circle">4</div>
+            <div class="step-text">
+                <strong>Account Activation</strong><br>
+                <small>Start listing properties</small>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="application-form-container">
+        {% csrf_token %}
+
+        <!-- Personal Information Section -->
+        <div class="section-divider">
+            <div class="section-header">
+                <h3>🏢 Company & Professional Information</h3>
+                <p>Please provide details about your real estate company and experience</p>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="{{ form.company_name.id_for_label }}">{{ form.company_name.label }} *</label>
+                {{ form.company_name }}
+                {% if form.company_name.errors %}
+                    {% for error in form.company_name.errors %}
+                        <div style="color: var(--nepal-crimson); font-size: 0.9em; margin-top: 5px;">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.license_number.id_for_label }}">{{ form.license_number.label }} *</label>
+                {{ form.license_number }}
+                {% if form.license_number.errors %}
+                    {% for error in form.license_number.errors %}
+                        <div style="color: var(--nepal-crimson); font-size: 0.9em; margin-top: 5px;">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="{{ form.license_expiry.id_for_label }}">{{ form.license_expiry.label }} *</label>
+                {{ form.license_expiry }}
+                {% if form.license_expiry.errors %}
+                    {% for error in form.license_expiry.errors %}
+                        <div style="color: var(--nepal-crimson); font-size: 0.9em; margin-top: 5px;">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.years_experience.id_for_label }}">{{ form.years_experience.label }} *</label>
+                {{ form.years_experience }}
+                {% if form.years_experience.errors %}
+                    {% for error in form.years_experience.errors %}
+                        <div style="color: var(--nepal-crimson); font-size: 0.9em; margin-top: 5px;">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="form-row full-width">
+            <div class="form-group">
+                <label for="{{ form.specializations.id_for_label }}">{{ form.specializations.label }}</label>
+                {{ form.specializations }}
+                {% if form.specializations.errors %}
+                    {% for error in form.specializations.errors %}
+                        <div style="color: var(--nepal-crimson); font-size: 0.9em; margin-top: 5px;">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Contact Information Section -->
+        <div class="section-divider">
+            <div class="section-header">
+                <h3>📞 Contact Information</h3>
+                <p>Your professional contact details for clients and administration</p>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="{{ form.contact_phone.id_for_label }}">{{ form.contact_phone.label }} *</label>
+                {{ form.contact_phone }}
+                {% if form.contact_phone.errors %}
+                    {% for error in form.contact_phone.errors %}
+                        <div style="color: var(--nepal-crimson); font-size: 0.9em; margin-top: 5px;">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.contact_email.id_for_label }}">{{ form.contact_email.label }} *</label>
+                {{ form.contact_email }}
+                {% if form.contact_email.errors %}
+                    {% for error in form.contact_email.errors %}
+                        <div style="color: var(--nepal-crimson); font-size: 0.9em; margin-top: 5px;">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Biography Section -->
+        <div class="section-divider">
+            <div class="section-header">
+                <h3>👤 Professional Biography</h3>
+                <p>Tell us about your experience and background in real estate</p>
+            </div>
+        </div>
+
+        <div class="form-row full-width">
+            <div class="form-group">
+                <label for="{{ form.bio.id_for_label }}">{{ form.bio.label }} *</label>
+                {{ form.bio }}
+                {% if form.bio.errors %}
+                    {% for error in form.bio.errors %}
+                        <div style="color: var(--nepal-crimson); font-size: 0.9em; margin-top: 5px;">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Document Upload Section -->
+        <div class="section-divider">
+            <div class="section-header">
+                <h3>📎 Required Documents</h3>
+                <p>Upload the following documents to complete your application</p>
+            </div>
+        </div>
+
+        <div class="requirements-list">
+            <h4>📋 Required Documents:</h4>
+            <ul>
+                <li><strong>License Document:</strong> A copy of your real estate license (PDF or image)</li>
+                <li><strong>Government ID:</strong> Passport, citizenship certificate, or driver's license</li>
+                <li><strong>Business Registration:</strong> If you have a registered real estate business</li>
+            </ul>
+            <p style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                All documents must be clear, legible, and valid. Files should not exceed 5MB each.
+            </p>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="{{ form.license_document.id_for_label }}">{{ form.license_document.label }} *</label>
+                <div class="file-upload-area" id="license-upload">
+                    {{ form.license_document }}
+                    <p>📄 Upload your real estate license document</p>
+                    <small>PDF, JPG, PNG files accepted (max 5MB)</small>
+                </div>
+                {% if form.license_document.errors %}
+                    {% for error in form.license_document.errors %}
+                        <div style="color: var(--nepal-crimson); font-size: 0.9em; margin-top: 5px;">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.id_document.id_for_label }}">{{ form.id_document.label }} *</label>
+                <div class="file-upload-area" id="id-upload">
+                    {{ form.id_document }}
+                    <p>🆔 Upload your government-issued ID</p>
+                    <small>PDF, JPG, PNG files accepted (max 5MB)</small>
+                </div>
+                {% if form.id_document.errors %}
+                    {% for error in form.id_document.errors %}
+                        <div style="color: var(--nepal-crimson); font-size: 0.9em; margin-top: 5px;">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="form-row full-width" style="margin-bottom: 0;">
+            <div class="form-group">
+                <label for="{{ form.business_registration.id_for_label }}">{{ form.business_registration.label }}</label>
+                <div class="file-upload-area" id="business-upload">
+                    {{ form.business_registration }}
+                    <p>🏢 Upload business registration (optional)</p>
+                    <small>PDF, JPG, PNG files accepted (max 5MB)</small>
+                </div>
+                {% if form.business_registration.errors %}
+                    {% for error in form.business_registration.errors %}
+                        <div style="color: var(--nepal-crimson); font-size: 0.9em; margin-top: 5px;">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Agreement Section -->
+        <div class="agreement-section">
+            <h4>✅ Application Agreement</h4>
+            <p>By submitting this application, I certify that:</p>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+                <li>All provided information is true and accurate</li>
+                <li>I hold a valid real estate license in Nepal</li>
+                <li>I agree to abide by real estate regulations and ethical practices</li>
+                <li>I understand that my application will be reviewed by administrators</li>
+            </ul>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+            <button type="button" onclick="window.history.back()" class="back-btn">
+                ← Go Back
+            </button>
+            <button type="submit" class="submit-btn">
+                🚀 Submit Application
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+// File upload drag and drop functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const fileUploadAreas = document.querySelectorAll('.file-upload-area');
+
+    fileUploadAreas.forEach(area => {
+        const fileInput = area.querySelector('input[type="file"]');
+
+        // Hide the actual file input
+        fileInput.style.display = 'none';
+
+        // Make the upload area clickable
+        area.addEventListener('click', function() {
+            fileInput.click();
+        });
+
+        // Drag and drop functionality
+        area.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            area.classList.add('drag-over');
+        });
+
+        area.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            area.classList.remove('drag-over');
+        });
+
+        area.addEventListener('drop', function(e) {
+            e.preventDefault();
+            area.classList.remove('drag-over');
+
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                updateFileDisplay(area, files[0]);
+            }
+        });
+
+        // File selection display
+        fileInput.addEventListener('change', function() {
+            if (fileInput.files.length > 0) {
+                updateFileDisplay(area, fileInput.files[0]);
+            }
+        });
+
+        function updateFileDisplay(area, file) {
+            const p = area.querySelector('p');
+            const small = area.querySelector('small');
+
+            if (file) {
+                p.textContent = `📎 ${file.name}`;
+                small.textContent = `Size: ${(file.size / 1024 / 1024).toFixed(2)} MB`;
+                area.style.borderColor = '#28a745';
+                area.style.backgroundColor = '#f8fff8';
+            }
+        }
+    });
+});
+
+// Form validation
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+
+    form.addEventListener('submit', function(e) {
+        const requiredFields = form.querySelectorAll('input[required], textarea[required], select[required]');
+        let isValid = true;
+
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                field.style.borderColor = '#dc3545';
+                isValid = false;
+            } else {
+                field.style.borderColor = '#28a745';
+            }
+        });
+
+        // Check file uploads
+        const fileInputs = form.querySelectorAll('input[type="file"][required]');
+        fileInputs.forEach(input => {
+            if (!input.files || input.files.length === 0) {
+                input.closest('.file-upload-area').style.borderColor = '#dc3545';
+                isValid = false;
+            }
+        });
+
+        if (!isValid) {
+            e.preventDefault();
+            alert('Please fill in all required fields and upload necessary documents.');
+            return false;
+        }
+
+        // Disable submit button to prevent double submission
+        const submitBtn = form.querySelector('.submit-btn');
+        submitBtn.disabled = true;
+        submitBtn.textContent = '📤 Submitting Application...';
+
+        return true;
+    });
+});
+</script>
+{% endblock %}

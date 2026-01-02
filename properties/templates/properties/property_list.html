@@ -4,460 +4,1667 @@
 
 {% block title %}Property Listings - Browse All Properties{% endblock %}
 
+{% block extra_js %}
+<!-- Modern Property System Scripts -->
+<script type="text/javascript">
+// Pass Django data to JavaScript
+</script>
+<script type="application/json" id="properties-data">
+{{ properties_data|safe }}
+</script>
+<script>
+window.propertiesData = JSON.parse(document.getElementById('properties-data').textContent);
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize filters
+    const filtersToggle = document.getElementById('filters-toggle');
+    const filtersPanel = document.getElementById('filters-panel');
+
+    if (filtersToggle && filtersPanel) {
+        filtersToggle.addEventListener('click', function() {
+            const isHidden = filtersPanel.style.display === 'none';
+            filtersPanel.style.display = isHidden ? 'block' : 'none';
+            this.classList.toggle('active', isHidden);
+        });
+    }
+
+    // View switching
+    window.changeSort = function(value) {
+        const url = new URL(window.location);
+        url.searchParams.set('sort', value);
+        url.searchParams.set('page', '1');
+        window.location.href = url.toString();
+    };
+
+    window.changePageSize = function(value) {
+        const url = new URL(window.location);
+        url.searchParams.set('page_size', value);
+        url.searchParams.set('page', '1');
+        window.location.href = url.toString();
+    };
+
+    window.changeView = function(view) {
+        const url = new URL(window.location);
+        url.searchParams.set('view', view);
+        url.searchParams.set('page', '1');
+        window.location.href = url.toString();
+    };
+
+    // Google Maps initialization
+    window.initMap = function() {
+        const properties = window.propertiesData || [];
+        const mapDiv = document.getElementById('property-map');
+
+        if (mapDiv && typeof google !== 'undefined' && properties.length > 0) {
+            try {
+                // Initialize map centered on first property or Kathmandu
+                const firstProp = properties[0];
+                const centerLatLng = new google.maps.LatLng(firstProp.lat || 27.7172, firstProp.lng || 85.3240);
+
+                const mapOptions = {
+                    center: centerLatLng,
+                    zoom: 10,
+                    mapTypeId: google.maps.MapTypeId.ROADMAP,
+                    disableDefaultUI: false,
+                    zoomControl: true,
+                    mapTypeControl: true,
+                    scaleControl: true,
+                    streetViewControl: true,
+                    rotateControl: true,
+                    fullscreenControl: true,
+                    styles: [
+                        {
+                            featureType: "poi",
+                            elementType: "labels",
+                            stylers: [{ visibility: "off" }]
+                        }
+                    ]
+                };
+
+                const map = new google.maps.Map(mapDiv, mapOptions);
+                const bounds = new google.maps.LatLngBounds();
+                const markers = [];
+                const infoWindows = [];
+
+                // Add markers for each property
+                properties.forEach(function(prop) {
+                    const latLng = new google.maps.LatLng(prop.lat, prop.lng);
+                    bounds.extend(latLng);
+
+                    // Create custom marker
+                    const markerColor = prop.is_premium ? '#FF6F00' : '#0033A0';
+                    const marker = new google.maps.Marker({
+                        position: latLng,
+                        map: map,
+                        icon: {
+                            path: google.maps.SymbolPath.CIRCLE,
+                            scale: 20,
+                            fillColor: markerColor,
+                            fillOpacity: 1,
+                            strokeColor: '#ffffff',
+                            strokeWeight: 3
+                        },
+                        animation: google.maps.Animation.DROP,
+                        title: prop.title
+                    });
+
+                    // Create info window content
+                    const infoWindowContent = `
+<div class="property-info-window">
+    <strong>${prop.title}</strong><br>
+    <span style="color: #ff6600;">NPR ${new Intl.NumberFormat('en-IN').format(prop.price)}</span>
+    ${prop.is_premium ? '<span style="background: #ff6600; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; margin-left: 5px;">PREMIUM</span>' : ''}
+    ${prop.is_verified ? '<br><span style="color: #28a745;">✓ Verified Property</span>' : ''}
+    <br><a href="${prop.url}" style="color: #0066cc; text-decoration: none;">View Details ›</a>
+</div>`;
+
+                    const infoWindow = new google.maps.InfoWindow({
+                        content: infoWindowContent,
+                        maxWidth: 300
+                    });
+
+                    // Add click listener to marker
+                    marker.addListener('click', () => {
+                        // Close any open info windows
+                        infoWindows.forEach(iw => iw.close());
+                        infoWindow.open(map, marker);
+                    });
+
+                    markers.push(marker);
+                    infoWindows.push(infoWindow);
+                });
+
+                // Fit map to show all markers
+                if (markers.length > 1) {
+                    map.fitBounds(bounds);
+                    // Adjust zoom if too close
+                    google.maps.event.addListenerOnce(map, 'bounds_changed', function() {
+                        if (map.getZoom() > 15) {
+                            map.setZoom(15);
+                        }
+                    });
+                }
+
+                // Store map instance for potential future use
+                window.propertyMap = map;
+                console.log('Google Maps initialized successfully with', properties.length, 'properties');
+            } catch (error) {
+                console.error('Error initializing Google Maps:', error);
+                // Show fallback message
+                mapDiv.innerHTML = `
+<div style="padding: 20px; text-align: center; color: #dc3545;">
+    <i class="fas fa-exclamation-triangle" style="font-size: 3em; margin-bottom: 10px;"></i>
+    <h3>Unable to load Google Maps</h3>
+    <p>Please check your internet connection and try again.</p>
+    <p>Error: ${error.message}</p>
+</div>`;
+            }
+        } else {
+            console.log('Google Maps initialization skipped:', { mapDiv: !!mapDiv, googleMaps: typeof google, properties: properties.length });
+            if (mapDiv) {
+                mapDiv.innerHTML = `
+<div style="padding: 20px; text-align: center; color: #6c757d;">
+    <i class="fas fa-spinner fa-spin" style="font-size: 2em; margin-bottom: 10px;"></i>
+    <h3>Loading Google Maps...</h3>
+    <p>This may take a few seconds to load.</p>
+</div>`;
+                // Retry initialization after delay
+                setTimeout(function() {
+                    if (typeof google !== 'undefined') {
+                        window.initMap();
+                    }
+                }, 3000);
+            }
+        }
+    };
+
+    // Quick actions
+    window.toggleFavorite = function(propertyId) {
+        fetch(`/properties/${propertyId}/toggle_favorite/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        }).then(response => response.json())
+        .then(data => {
+            const btn = document.querySelector(`[data-property-id="${propertyId}"].favorite-btn i`);
+            if (data.is_favorite) {
+                btn.classList.remove('far');
+                btn.classList.add('fas');
+                showToast('Added to favorites!', 'success');
+            } else {
+                btn.classList.remove('fas');
+                btn.classList.add('far');
+                showToast('Removed from favorites!', 'info');
+            }
+        });
+    };
+
+    window.contactBroker = function(propertyId) {
+        fetch(`/properties/${propertyId}/contact_broker/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        }).then(response => response.json())
+        .then(data => {
+            showToast('Contact request sent!', 'success');
+        });
+    };
+
+    window.shareProperty = function(propertyId, propertyTitle) {
+        const propertyUrl = `${window.location.origin}/properties/${propertyId}/`;
+        if (navigator.share) {
+            navigator.share({
+                title: propertyTitle,
+                url: propertyUrl
+            });
+        } else {
+            navigator.clipboard.writeText(propertyUrl);
+            showToast('Property link copied!', 'info');
+        }
+    };
+
+    // Toast system
+    function showToast(message, type = 'info') {
+        let toast = document.querySelector('.toast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.className = 'toast';
+            document.body.appendChild(toast);
+        }
+        toast.className = `toast toast-${type}`;
+        toast.innerHTML = ` <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i> ${message}`;
+        toast.style.display = 'block';
+        setTimeout(() => {
+            toast.style.display = 'none';
+        }, 3000);
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+            e.preventDefault();
+            const searchInput = document.querySelector('.search-input-modern');
+            if (searchInput) searchInput.focus();
+        }
+    });
+
+    // Initialize map when view is complete
+    console.log('View mode:', '{{ view_mode }}');
+    console.log('Properties data:', window.propertiesData);
+    if ('{{ view_mode }}' === 'map') {
+        // Wait for Google Maps to load, then initialize map
+        console.log('Initializing map for map view...');
+        setTimeout(initMap, 1000);
+    }
+});
+</script>
+{% endblock %}
+
 {% block content %}
-    <div class="page-header">
-        <h1>Property Listings</h1>
-        <p>Browse our extensive collection of properties for sale and lease</p>
+<div class="modern-property-system">
+    <!-- Clean Header -->
+    <div class="system-header">
+        <h1>Property Marketplace</h1>
+        <p class="header-subtitle">Find your perfect property with advanced search and filters</p>
     </div>
 
-    <!-- Search and Filter Section -->
-    <div class="search-filter-section">
-        <form method="get" class="filter-form">
-            <div class="filter-row">
-                <div class="filter-group">
-                    <label for="property_type">Property Type:</label>
-                    <select name="property_type" id="property_type">
-                        <option value="">All Types</option>
-                        <option value="office" {% if request.GET.property_type == 'office' %}selected{% endif %}>Office</option>
-                        <option value="retail" {% if request.GET.property_type == 'retail' %}selected{% endif %}>Retail</option>
-                        <option value="industrial" {% if request.GET.property_type == 'industrial' %}selected{% endif %}>Industrial</option>
-                        <option value="land" {% if request.GET.property_type == 'land' %}selected{% endif %}>Land</option>
-                        <option value="multifamily" {% if request.GET.property_type == 'multifamily' %}selected{% endif %}>Multifamily</option>
-                    </select>
+    <!-- Modern Search Bar -->
+    <div class="search-container">
+        <form method="get" action="{% url 'properties:property_list' %}" class="search-form-modern">
+            <div class="search-fields">
+                <div class="search-group">
+                    <i class="fas fa-search"></i>
+                    <input type="text" name="search" value="{{ current_filters.search }}"
+                           placeholder="Search properties, locations, amenities..." class="search-input-modern">
                 </div>
-
-                <div class="filter-group">
-                    <label for="listing_type">Listing Type:</label>
-                    <select name="listing_type" id="listing_type">
-                        <option value="">All Listings</option>
-                        <option value="sale" {% if request.GET.listing_type == 'sale' %}selected{% endif %}>For Sale</option>
-                        <option value="lease" {% if request.GET.listing_type == 'lease' %}selected{% endif %}>For Lease</option>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label for="min_price">Min Price (NPR):</label>
-                    <input type="number" name="min_price" id="min_price" value="{{ request.GET.min_price }}" placeholder="0">
-                </div>
-
-                <div class="filter-group">
-                    <label for="max_price">Max Price (NPR):</label>
-                    <input type="number" name="max_price" id="max_price" value="{{ request.GET.max_price }}" placeholder="No limit">
-                </div>
-
-                <div class="filter-group">
-                    <label for="city">City:</label>
-                    <input type="text" name="city" id="city" value="{{ request.GET.city }}" placeholder="Enter city">
-                </div>
-
-                <div class="filter-actions">
-                    <button type="submit" class="filter-btn">Filter</button>
-                    <a href="{% url 'properties:property_list' %}" class="clear-btn">Clear Filters</a>
-                </div>
+                <select name="listing_type" class="filter-select">
+                    <option value="">All Types</option>
+                    <option value="sale" {% if current_filters.listing_type == 'sale' %}selected{% endif %}>For Sale</option>
+                    <option value="lease" {% if current_filters.listing_type == 'lease' %}selected{% endif %}>For Lease</option>
+                </select>
+                <button type="submit" class="search-btn-modern">
+                    <i class="fas fa-search"></i>
+                    <span>Search</span>
+                </button>
             </div>
+            <!-- Search Info -->
+            {% if current_filters.search %}
+                <div class="search-info">
+                    <a href="{% url 'properties:property_list' %}">Clear search</a>
+                </div>
+            {% endif %}
+
+            <!-- Map View -->
+            {% if view_mode == 'map' %}
+                <div class="property-map-container">
+                    <div id="property-map" class="property-map"></div>
+                </div>
+            {% else %}
+                <!-- Default Grid View -->
+                <div class="property-listing grid-mode">
+                    {% for property in properties %}
+                        <div class="property-card-modern grid-card">
+                            <div class="property-media">
+                                <div class="property-images">
+                                    {% with image_list=property.images.all %}
+                                        {% for image in image_list %}
+                                            {% if image.status == 'approved' %}
+                                                <img src="{{ image.image.url }}" alt="{{ property.title }}" class="property-img">
+                                            {% endif %}
+                                        {% empty %}
+                                            {% if property.floor_plan_image %}
+                                                <img src="{{ property.floor_plan_image.url }}" alt="{{ property.title }}" class="property-img">
+                                            {% else %}
+                                                <div class="no-image-modern">
+                                                    <i class="fas fa-building"></i>
+                                                    <span>Property</span>
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endwith %}
+                                </div>
+                                {% if property.is_premium %}
+                                    <div class="premium-indicator">
+                                        <i class="fas fa-star"></i>
+                                    </div>
+                                {% endif %}
+                                {% if property.is_verified %}
+                                    <div class="verified-indicator">
+                                        <i class="fas fa-shield-check"></i>
+                                    </div>
+                                {% endif %}
+
+                                <div class="quick-actions-overlay-modern">
+                                    <button class="quick-action-btn-modern favorite-btn"
+                                            data-property-id="{{ property.id }}"
+                                            data-is-favorited="{% if request.user.is_authenticated %}{% if property.id in request.user.favorite_property_ids %}true{% else %}false{% endif %}{% else %}false{% endif %}"
+                                            onclick="toggleFavorite({{ property.id }})">
+                                        <i class="{% if request.user.is_authenticated %}{% if property.id in request.user.favorite_property_ids %}fas{% else %}far{% endif %}{% else %}far{% endif %} fa-heart"></i>
+                                    </button>
+                                    <button class="quick-action-btn-modern contact-btn" onclick="contactBroker({{ property.id }})">
+                                        <i class="fas fa-envelope"></i>
+                                    </button>
+                                    <button class="quick-action-btn-modern share-btn" onclick="shareProperty({{ property.id }}, '{{ property.title|escapejs }}')">
+                                        <i class="fas fa-share-alt"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="property-content-modern">
+                                <div class="property-price-modern">
+                                    <span class="price-main">NPR {{ property.price|intcomma }}</span>
+                                    {% if property.status == 'for_lease' %}
+                                        <span class="price-period">/month</span>
+                                    {% endif %}
+                                </div>
+
+                                <h3 class="property-title-modern">
+                                    <a href="{% url 'properties:property_detail' property.pk %}">{{ property.title }}</a>
+                                </h3>
+
+                                <div class="property-meta-modern">
+                                    <span class="property-type">{{ property.property_type.name }}</span>
+                                    <span class="listing-type">{{ property.get_status_display }}</span>
+                                </div>
+
+                                <div class="property-location-modern">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span>{{ property.city }}, {{ property.state }}</span>
+                                </div>
+
+                                <div class="property-specifics-compact">
+                                    {% if property.square_footage %}
+                                        <span class="spec-item">{{ property.square_footage|intcomma }} sq ft</span>
+                                    {% endif %}
+                                    {% if property.year_built %}
+                                        <span class="spec-item">Built {{ property.year_built }}</span>
+                                    {% endif %}
+                                </div>
+
+                                <div class="grid-view-actions">
+                                    <a href="{% url 'properties:property_detail' property.pk %}" class="view-details-grid-btn">
+                                        <i class="fas fa-eye"></i> View Details
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
         </form>
     </div>
 
-    <!-- Results Summary -->
-    <div class="results-summary">
-        <p>{{ properties|length }} properties found</p>
-        <div class="view-options">
-            <span>View:</span>
-            <a href="?{% if request.GET %} {{ request.GET.urlencode }}&{% endif %}view=list" class="{% if view_mode == 'list' or not view_mode %}active{% endif %}">List</a>
-            <a href="?{% if request.GET %} {{ request.GET.urlencode }}&{% endif %}view=grid" class="{% if view_mode == 'grid' %}active{% endif %}">Grid</a>
-            <a href="?{% if request.GET %} {{ request.GET.urlencode }}&{% endif %}view=map" class="{% if view_mode == 'map' %}active{% endif %}">Map</a>
+    <!-- Controls Bar -->
+    <div class="controls-bar">
+        <div class="left-controls">
+            <button type="button" class="filter-toggle-btn" id="filters-toggle">
+                <i class="fas fa-filter"></i>
+                <span>Filters</span>
+                {% if current_filters %}
+                    <span class="filter-count">({{ current_filters|length }})</span>
+                {% endif %}
+            </button>
+        </div>
+
+        <div class="right-controls">
+            <div class="view-controls">
+                <select name="sort" onchange="changeSort(this.value)" class="sort-select">
+                    <option value="date_new" {% if current_filters.sort == 'date_new' %}selected{% endif %}>Newest First</option>
+                    <option value="price_low" {% if current_filters.sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+                    <option value="price_high" {% if current_filters.sort == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+                </select>
+
+                <div class="view-modes">
+                    <button type="button" class="view-mode-btn grid-view {% if not view_mode or view_mode == 'grid' %}active{% endif %}"
+                            onclick="changeView('grid')" title="Grid View">
+                        <i class="fas fa-th-large"></i>
+                    </button>
+                    <button type="button" class="view-mode-btn list-view {% if view_mode == 'list' %}active{% endif %}"
+                            onclick="changeView('list')" title="List View">
+                        <i class="fas fa-list"></i>
+                    </button>
+                    <button type="button" class="view-mode-btn map-view {% if view_mode == 'map' %}active{% endif %}"
+                            onclick="changeView('map')" title="Map View">
+                        <i class="fas fa-map-marked-alt"></i>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Property Listings -->
-    {% if properties %}
-        {% if view_mode == 'map' %}
-            <div id="map" style="height: 600px; width: 100%; border-radius: 10px;"></div>
-        {% else %}
-            <div class="property-list {% if view_mode == 'grid' %}grid-view{% endif %}">
-                {% for property in properties %}
-                    <div class="property-card {% if property.is_premium %}premium-highlight{% endif %}">
-                        <div class="property-image">
-                            {% with approved_list=property.images.all %}
-                            {% for image in approved_list %}
-                                {% if image.status == 'approved' %}
-                                    <img src="{{ image.image.url }}" alt="{{ property.title }}">
-                                    {% comment %} Show only the first approved image {% endcomment %}
+    <!-- Expandable Filters Panel -->
+    <div class="advanced-filters" id="filters-panel" style="display: none;">
+        <div class="filters-content">
+            <div class="filters-grid-modern">
+                <div class="filter-item">
+                    <label>Property Type</label>
+                    <select name="property_type">
+                        <option value="">All Types</option>
+                        {% for property_type in property_types %}
+                            <option value="{{ property_type.id }}" {% if current_filters.property_type == property_type.id|stringformat:'s' %}selected{% endif %}>
+                                {{ property_type.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-item">
+                    <label>Price Range</label>
+                    <div class="price-range-inputs">
+                        <input type="number" name="min_price" value="{{ current_filters.min_price }}" placeholder="Min">
+                        <input type="number" name="max_price" value="{{ current_filters.max_price }}" placeholder="Max">
+                    </div>
+                </div>
+
+                <div class="filter-item">
+                    <label>City</label>
+                    <input type="text" name="city" value="{{ current_filters.city }}" placeholder="City name">
+                </div>
+
+                <div class="filter-item">
+                    <label>Size (sq ft)</label>
+                    <div class="size-range-inputs">
+                        <input type="number" name="min_sq_ft" value="{{ current_filters.min_sq_ft }}" placeholder="Min">
+                        <input type="number" name="max_sq_ft" value="{{ current_filters.max_sq_ft }}" placeholder="Max">
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-actions">
+                <button type="submit" class="apply-filters-btn">
+                    <i class="fas fa-check"></i> Apply Filters
+                </button>
+                <a href="{% url 'properties:property_list' %}" class="clear-all-btn">
+                    <i class="fas fa-trash"></i> Clear All
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <div class="results-section">
+        <div class="results-info">
+            <div class="results-count">
+                <strong>{{ filtered_count|intcomma }}</strong> properties found
+            </div>
+            {% if saved_searches %}
+                <div class="saved-searches-dropdown">
+                    <select onchange="location.href=this.value" class="saved-search-select">
+                        <option value="">Quick Searches</option>
+                        {% for search in saved_searches %}
+                            <option value="?saved_search={{ search.id }}">{{ search.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Property Listings -->
+        {% if properties %}
+            {% if view_mode == 'list' %}
+                <!-- List View -->
+                <div class="property-listing list-mode">
+                    {% for property in properties %}
+                <div class="property-card-modern list-card">
+                            <div class="property-media">
+                                <div class="property-images">
+                                    {% load static %}
+                                    {% with image_list=property.images.all %}
+                                        {% for image in image_list %}
+                                            {% if image.status == 'approved' %}
+                                                <img src="{{ image.image.url }}" alt="{{ property.title }}" class="property-img">
+                                            {% endif %}
+                                        {% empty %}
+                                            {% if property.floor_plan_image %}
+                                                <img src="{{ property.floor_plan_image.url }}" alt="{{ property.title }}" class="property-img">
+                                            {% else %}
+                                                <div class="no-image-modern">
+                                                    <i class="fas fa-building"></i>
+                                                    <span>Property Image</span>
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endwith %}
+                                </div>
+                                {% if property.is_premium %}
+                                    <div class="premium-indicator">
+                                        <i class="fas fa-star"></i> Premium
+                                    </div>
                                 {% endif %}
-                            {% empty %}
-                                {% if property.floor_plan_image %}
-                                    <img src="{{ property.floor_plan_image.url }}" alt="{{ property.title }} Floor Plan">
-                                {% else %}
-                                    <div class="no-image">No Image Available</div>
+                                {% if property.is_verified %}
+                                    <div class="verified-indicator">
+                                        <i class="fas fa-shield-check"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="property-details-modern">
+                                <div class="property-header-modern">
+                                    <h3>
+                                        <a href="{% url 'properties:property_detail' property.pk %}">{{ property.title }}</a>
+                                    </h3>
+                                    <div class="property-meta">
+                                        <span class="property-type">{{ property.property_type.name }}</span>
+                                        <span class="listing-type">{{ property.get_status_display }}</span>
+                                    </div>
+                                </div>
+
+                                <div class="property-price-modern">
+                                    <span class="price-main">NPR {{ property.price|intcomma }}</span>
+                                    {% if property.status == 'for_lease' %}
+                                        <span class="price-period">/month</span>
+                                    {% endif %}
+                                </div>
+
+                                <div class="property-location-modern">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span>{{ property.city }}, {{ property.state }}</span>
+                                </div>
+
+                                <div class="property-specifics">
+                                    {% if property.square_footage %}
+                                        <span class="spec-item">
+                                            <i class="fas fa-home"></i>
+                                            {{ property.square_footage|intcomma }} sq ft
+                                        </span>
+                                    {% endif %}
+                                    {% if property.year_built %}
+                                        <span class="spec-item">
+                                            <i class="fas fa-calendar"></i>
+                                            Built {{ property.year_built }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+
+                                <p class="property-description-modern">{{ property.description|truncatechars:150 }}</p>
+
+                                {% if property.company %}
+                                    <div class="broker-info">
+                                        <i class="fas fa-building"></i>
+                                        <span>{{ property.company.name }}</span>
+                                    </div>
+                                {% endif %}
+
+                                <div class="property-actions-modern">
+                                    <a href="{% url 'properties:property_detail' property.pk %}" class="primary-action-btn">
+                                        <i class="fas fa-eye"></i> View Details
+                                    </a>
+                                    <div class="secondary-action-btns">
+                                        <button class="action-btn-small favorite-btn" data-property-id="{{ property.id }}" onclick="toggleFavorite({{ property.id }})">
+                                            <i class="far fa-heart"></i>
+                                        </button>
+                                        <button class="action-btn-small contact-btn" onclick="contactBroker({{ property.id }})">
+                                            <i class="fas fa-envelope"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <!-- Grid View -->
+                <div class="property-listing grid-mode">
+                    {% for property in properties %}
+                        <div class="property-card-modern grid-card">
+                            <div class="property-media">
+                                <div class="property-images">
+                                    {% with image_list=property.images.all %}
+                                        {% for image in image_list %}
+                                            {% if image.status == 'approved' %}
+                                                <img src="{{ image.image.url }}" alt="{{ property.title }}" class="property-img">
+                                            {% endif %}
+                                        {% empty %}
+                                            {% if property.floor_plan_image %}
+                                                <img src="{{ property.floor_plan_image.url }}" alt="{{ property.title }}" class="property-img">
+                                            {% else %}
+                                                <div class="no-image-modern">
+                                                    <i class="fas fa-building"></i>
+                                                    <span>Property</span>
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endwith %}
+                                </div>
+                                {% if property.is_premium %}
+                                    <div class="premium-indicator">
+                                        <i class="fas fa-star"></i>
+                                    </div>
+                                {% endif %}
+                                {% if property.is_verified %}
+                                    <div class="verified-indicator">
+                                        <i class="fas fa-shield-check"></i>
+                                    </div>
+                                {% endif %}
+
+                                <div class="quick-actions-overlay-modern">
+                                    <button class="quick-action-btn-modern favorite-btn" data-property-id="{{ property.id }}"
+                                            onclick="toggleFavorite({{ property.id }})">
+                                        <i class="far fa-heart"></i>
+                                    </button>
+                                    <button class="quick-action-btn-modern contact-btn" onclick="contactBroker({{ property.id }})">
+                                        <i class="fas fa-envelope"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="property-content-modern">
+                                <div class="property-price-modern">
+                                    <span class="price-main">NPR {{ property.price|intcomma }}</span>
+                                    {% if property.status == 'for_lease' %}
+                                        <span class="price-period">/month</span>
+                                    {% endif %}
+                                </div>
+
+                                <h3 class="property-title-modern">
+                                    <a href="{% url 'properties:property_detail' property.pk %}">{{ property.title }}</a>
+                                </h3>
+
+                                <div class="property-meta-modern">
+                                    <span class="property-type">{{ property.property_type.name }}</span>
+                                    <span class="listing-type">{{ property.get_status_display }}</span>
+                                </div>
+
+                                <div class="property-location-modern">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span>{{ property.city }}, {{ property.state }}</span>
+                                </div>
+
+                                <div class="property-specifics-compact">
+                                    {% if property.square_footage %}
+                                        <span class="spec-item">{{ property.square_footage|intcomma }} sq ft</span>
+                                    {% endif %}
+                                    {% if property.year_built %}
+                                        <span class="spec-item">Built {{ property.year_built }}</span>
+                                    {% endif %}
+                                </div>
+
+                                <div class="grid-view-actions">
+                                    <a href="{% url 'properties:property_detail' property.pk %}" class="view-details-grid-btn">
+                                        <i class="fas fa-eye"></i> View Details
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+                <div class="pagination-modern">
+                    <div class="pagination-info-modern">
+                        Showing {{ properties.start_index }}-{{ properties.end_index }} of {{ filtered_count|intcomma }} properties
+                    </div>
+
+                    <div class="pagination-controls-modern">
+                        {% if page_obj.has_previous %}
+                            <a href="?page={{ page_obj.previous_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+                               class="pagination-btn-modern prev-btn">
+                                <i class="fas fa-chevron-left"></i> Previous
+                            </a>
+                        {% endif %}
+
+                        <div class="pagination-numbers-modern">
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <span class="pagination-number-modern active">{{ num }}</span>
+                                {% elif num <= page_obj.number|add:"2" and num >= page_obj.number|add:"-2" %}
+                                    <a href="?page={{ num }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+                                       class="pagination-number-modern">{{ num }}</a>
                                 {% endif %}
                             {% endfor %}
-                            {% endwith %}
-                            {% if property.is_premium %}
-                                <div class="premium-badge">Premium</div>
-                            {% endif %}
                         </div>
-                        <div class="property-card-content">
-                            <h3>{{ property.title }}</h3>
-                            <div class="property-meta">
-                                <p class="price">NPR {{ property.price|intcomma }}</p>
-                                <p class="location">{{ property.city }}, {{ property.state }}</p>
-                                <p class="type">{{ property.property_type }} • {{ property.status|title }}</p>
-                                {% if property.square_footage %}
-                                    <p class="size">{{ property.square_footage|intcomma }} sq ft</p>
-                                {% endif %}
-                            </div>
-                            <p class="description">{{ property.description|truncatechars:120 }}</p>
-                            <div class="property-actions">
-                                <a href="{% url 'properties:property_detail' property.pk %}" class="view-details-btn">View Details</a>
-                                {% if property.broker_name %}
-                                    <p class="broker-info">Listed by: {{ property.broker_name }}</p>
-                                {% endif %}
-                            </div>
-                        </div>
+
+                        {% if page_obj.has_next %}
+                            <a href="?page={{ page_obj.next_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+                               class="pagination-btn-modern next-btn">
+                                Next <i class="fas fa-chevron-right"></i>
+                            </a>
+                        {% endif %}
                     </div>
-                {% endfor %}
+                </div>
+            {% endif %}
+
+        {% else %}
+            <!-- No Results -->
+            <div class="no-results-modern">
+                <div class="no-results-icon-modern">
+                    <i class="fas fa-search-location"></i>
+                </div>
+                <h3>No properties found</h3>
+                <p>Try adjusting your search criteria or clear some filters.</p>
+                <div class="no-results-actions-modern">
+                    <a href="{% url 'properties:property_list' %}" class="action-primary-btn">
+                        <i class="fas fa-refresh"></i> Clear All Filters
+                    </a>
+                </div>
             </div>
         {% endif %}
+    </div>
+</div>
 
-        <!-- Pagination (if needed) -->
-        {% if is_paginated %}
-            <div class="pagination">
-                {% if page_obj.has_previous %}
-                    <a href="?page={{ page_obj.previous_page_number }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}" class="pagination-btn">Previous</a>
-                {% endif %}
-
-                <span class="pagination-info">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
-
-                {% if page_obj.has_next %}
-                    <a href="?page={{ page_obj.next_page_number }}{% if request.GET %}&{{ request.GET.urlencode }}{% endif %}" class="pagination-btn">Next</a>
-                {% endif %}
-            </div>
-        {% endif %}
-    {% else %}
-        <div class="no-results">
-            <h3>No properties found</h3>
-            <p>Try adjusting your search criteria or browse all available properties.</p>
-            <a href="{% url 'properties:property_list' %}" class="button">View All Properties</a>
-        </div>
-    {% endif %}
-{% endblock %}
-
-{% block extra_css %}
 <style>
-.page-header {
+/* Modern Property System Styles - Nepal Real Estate */
+:root {
+    --nepal-blue: #0033A0;           /* National flag blue */
+    --nepal-crimson: #DC143C;        /* National flag crimson */
+    --nepal-saffron: #FF6F00;        /* Temple/maroon/saffron */
+    --nepal-green: #509F3F;          /* Nature/prosperity */
+    --nepal-cream: #F5F1E8;          /* Traditional cream */
+    --system-bg: #f8f9fa;
+    --card-bg: #ffffff;
+    --text-primary: #2C2C2C;         /* Deep charcoal */
+    --text-secondary: #666666;
+    --border-color: #e0e0e0;
+}
+
+.modern-property-system {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Header */
+.system-header {
     text-align: center;
     margin-bottom: 40px;
-    padding: 30px;
-    background: linear-gradient(135deg, var(--nepal-blue), var(--nepal-crimson));
-    color: white;
-    border-radius: 10px;
+    padding: 40px 20px;
 }
 
-.page-header h1 {
+.system-header h1 {
+    font-size: 3em;
+    font-weight: 300;
+    color: var(--nepal-blue);
     margin: 0 0 10px 0;
-    font-size: 2.5em;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.page-header p {
+.header-subtitle {
+    font-size: 1.2em;
+    color: var(--text-secondary);
     margin: 0;
-    opacity: 0.9;
+    font-weight: 400;
 }
 
-.search-filter-section {
-    background: white;
-    padding: 25px;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+/* Search Container */
+.search-container {
+    background: var(--card-bg);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
     margin-bottom: 30px;
 }
 
-.filter-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
-    align-items: end;
-}
-
-.filter-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-    color: var(--nepal-blue);
-}
-
-.filter-group input,
-.filter-group select {
+.search-form-modern {
     width: 100%;
-    padding: 10px;
-    border: 2px solid #ddd;
-    border-radius: 5px;
-    font-size: 1em;
+}
+
+.search-fields {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.search-group {
+    flex: 1;
+    min-width: 300px;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-group i {
+    position: absolute;
+    left: 20px;
+    color: var(--text-secondary);
+    z-index: 2;
+}
+
+.search-input-modern {
+    width: 100%;
+    padding: 16px 16px 16px 50px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.search-input-modern:focus {
+    outline: none;
+    border-color: var(--nepal-blue);
+    box-shadow: 0 0 0 3px rgba(0, 51, 160, 0.1);
+}
+
+.filter-select {
+    flex: 0 0 180px;
+    padding: 16px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 16px;
+    background: var(--card-bg);
+    cursor: pointer;
+}
+
+.search-btn-modern {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--nepal-blue);
+    color: white;
+    border: none;
+    padding: 16px 32px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.search-btn-modern:hover {
+    background: var(--nepal-crimson);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 51, 160, 0.3);
+}
+
+/* Controls Bar */
+.controls-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+}
+
+.filter-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--nepal-blue);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.filter-toggle-btn:hover {
+    background: var(--nepal-crimson);
+}
+
+.filter-count {
+    background: rgba(255,255,255,0.2);
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 0.8em;
+}
+
+.sort-select {
+    padding: 12px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--card-bg);
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.view-modes {
+    display: flex;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-left: 20px;
+}
+
+.view-mode-btn {
+    padding: 12px 16px;
+    background: var(--card-bg);
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.view-mode-btn:hover,
+.view-mode-btn.active {
+    background: var(--nepal-blue);
+    color: white;
+}
+
+/* Advanced Filters */
+.advanced-filters {
+    background: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    margin-bottom: 30px;
+    overflow: hidden;
+}
+
+.filters-content {
+    padding: 30px;
+}
+
+.filters-grid-modern {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.filter-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.filter-item label {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.filter-item input,
+.filter-item select {
+    padding: 12px;
+    border: 2px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+}
+
+.filter-item input:focus,
+.filter-item select:focus {
+    outline: none;
+    border-color: var(--nepal-blue);
+}
+
+.price-range-inputs,
+.size-range-inputs {
+    display: flex;
+    gap: 12px;
+}
+
+.price-range-inputs input,
+.size-range-inputs input {
+    flex: 1;
 }
 
 .filter-actions {
     display: flex;
-    gap: 10px;
-    align-items: center;
+    gap: 12px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
 }
 
-.filter-btn {
-    background-color: var(--nepal-crimson);
+.apply-filters-btn {
+    background: var(--nepal-blue);
     color: white;
     border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
     cursor: pointer;
-    font-weight: bold;
+    transition: all 0.3s ease;
 }
 
-.clear-btn {
-    background-color: #666;
+.apply-filters-btn:hover {
+    background: var(--nepal-crimson);
+}
+
+.clear-all-btn {
+    background: #6c757d;
     color: white;
     text-decoration: none;
-    padding: 10px 15px;
-    border-radius: 5px;
-    font-size: 0.9em;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
 }
 
-.clear-btn:hover {
-    background-color: #555;
+.clear-all-btn:hover {
+    background: #545b62;
 }
 
-.results-summary {
+/* Results Info */
+.results-section {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+}
+
+.results-info {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 30px;
-    padding: 15px 20px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    flex-wrap: wrap;
+    gap: 20px;
 }
 
-.view-options a {
-    margin-left: 10px;
-    padding: 5px 15px;
-    text-decoration: none;
-    border-radius: 20px;
-    transition: all 0.3s ease;
+.results-count {
+    font-size: 1.2em;
+    color: var(--text-primary);
 }
 
-.view-options a.active,
-.view-options a:hover {
-    background-color: var(--nepal-blue);
-    color: white;
+.saved-searches-dropdown .saved-search-select {
+    padding: 10px 16px;
+    border: 2px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 14px;
+    background: var(--card-bg);
+    cursor: pointer;
 }
 
-.property-list.grid-view {
+/* Property Cards */
+.property-listing.grid-mode {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
     gap: 30px;
+    margin-bottom: 40px;
 }
 
-.property-card {
-    background: white;
-    border-radius: 10px;
+.property-cards .list-mode {
+    margin-bottom: 20px;
+}
+
+.property-card-modern {
+    background: var(--card-bg);
+    border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
 }
 
-.property-card:hover {
+.property-card-modern:hover {
     transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    border-color: var(--nepal-blue);
 }
 
-.property-card.premium-highlight {
-    border: 2px solid gold;
-}
-
-.property-image {
+.grid-card .property-media {
     position: relative;
-    height: 200px;
+    height: 240px;
     overflow: hidden;
 }
 
-.property-image img {
+.grid-card .property-images img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.3s ease;
 }
 
-.property-card:hover .property-image img {
-    transform: scale(1.05);
-}
-
-.no-image {
+.no-image-modern {
     width: 100%;
     height: 100%;
-    background: linear-gradient(135deg, var(--nepal-blue), var(--nepal-crimson));
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
-    font-weight: bold;
-    font-size: 1.1em;
-    text-align: center;
+    background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
+    font-size: 3em;
+    color: #ccc;
 }
 
-.premium-badge {
+.premium-indicator {
     position: absolute;
-    top: 10px;
-    right: 10px;
-    background: gold;
-    color: #333;
-    padding: 5px 10px;
+    top: 15px;
+    left: 15px;
+    background: var(--nepal-saffron);
+    color: white;
+    padding: 6px 12px;
     border-radius: 20px;
     font-size: 0.8em;
     font-weight: bold;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
 
-.property-card-content {
+.verified-indicator {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: var(--nepal-green);
+    color: white;
+    padding: 6px;
+    border-radius: 50%;
+    font-size: 1em;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.quick-actions-overlay-modern {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    opacity: 0;
+    transform: translateX(50px);
+    transition: all 0.3s ease;
+}
+
+.property-card-modern:hover .quick-actions-overlay-modern {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.quick-action-btn-modern {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    color: white;
+}
+
+.favorite-btn {
+    background: rgba(220, 20, 60, 0.9);
+}
+
+.favorite-btn:hover {
+    background: var(--nepal-crimson);
+    transform: scale(1.1);
+}
+
+.contact-btn {
+    background: rgba(0, 51, 160, 0.9);
+}
+
+.contact-btn:hover {
+    background: var(--nepal-blue);
+    transform: scale(1.1);
+}
+
+.grid-card .property-content-modern {
     padding: 20px;
 }
 
-.property-card h3 {
-    margin: 0 0 15px 0;
+.property-price-modern {
+    margin-bottom: 15px;
+}
+
+.price-main {
+    font-size: 1.8em;
+    font-weight: bold;
+    color: var(--nepal-crimson);
+}
+
+.price-period {
+    color: var(--text-secondary);
+    font-weight: normal;
+}
+
+.property-title-modern {
+    margin: 0 0 10px 0;
+    font-size: 1.2em;
+}
+
+.property-title-modern a {
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.property-title-modern a:hover {
     color: var(--nepal-blue);
+}
+
+.property-meta-modern {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 10px;
+    font-size: 0.9em;
+    color: var(--text-secondary);
+}
+
+.property-location-modern {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9em;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+}
+
+.property-specifics-compact {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.grid-view-actions {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid var(--border-color);
+}
+
+.view-details-grid-btn {
+    background: var(--nepal-blue);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.view-details-grid-btn:hover {
+    background: var(--nepal-crimson);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 51, 160, 0.3);
+}
+
+.spec-item {
+    font-size: 0.85em;
+    color: var(--text-secondary);
+}
+
+/* List Card Styles */
+.list-card {
+    display: flex;
+    gap: 25px;
+}
+
+.list-card .property-media {
+    flex: 0 0 300px;
+    height: 220px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.list-card .property-details-modern {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.property-header-modern {
+    margin-bottom: 15px;
+}
+
+.property-header-modern h3 {
+    margin: 0 0 8px 0;
     font-size: 1.3em;
 }
 
-.property-meta p {
-    margin: 5px 0;
-    font-size: 0.95em;
+.property-meta {
+    display: flex;
+    gap: 20px;
+    font-size: 0.9em;
+    color: var(--text-secondary);
 }
 
-.price {
-    font-size: 1.4em !important;
-    font-weight: bold;
-    color: var(--nepal-crimson) !important;
-}
-
-.location {
-    color: #666;
-}
-
-.type {
-    color: #888;
-}
-
-.size {
-    color: #888;
-}
-
-.description {
-    color: #666;
-    line-height: 1.5;
+.property-specifics {
+    display: flex;
+    gap: 20px;
     margin: 15px 0;
 }
 
-.property-actions {
-    margin-top: 15px;
+.spec-item {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: 6px;
+    font-size: 0.9em;
+    color: var(--text-secondary);
 }
 
-.view-details-btn {
-    background-color: var(--nepal-blue);
-    color: white;
-    padding: 8px 16px;
-    border-radius: 5px;
-    text-decoration: none;
-    font-weight: 500;
-    transition: background-color 0.3s ease;
-}
-
-.view-details-btn:hover {
-    background-color: #002a70;
+.property-description-modern {
+    color: var(--text-secondary);
+    margin: 15px 0;
+    line-height: 1.6;
 }
 
 .broker-info {
-    font-size: 0.85em;
-    color: #888;
-    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9em;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
 }
 
-.pagination {
+.property-actions-modern {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.primary-action-btn {
+    background: var(--nepal-blue);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.primary-action-btn:hover {
+    background: var(--nepal-crimson);
+    transform: translateY(-2px);
+}
+
+.secondary-action-btns {
+    display: flex;
+    gap: 10px;
+}
+
+.action-btn-small {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    border: 2px solid var(--border-color);
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    color: var(--text-secondary);
+}
+
+.action-btn-small:hover {
+    border-color: var(--nepal-blue);
+    color: var(--nepal-blue);
+    transform: scale(1.1);
+}
+
+/* Pagination */
+.pagination-modern {
+    background: var(--card-bg);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+    margin-top: 40px;
+}
+
+.pagination-info-modern {
+    text-align: center;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+}
+
+.pagination-controls-modern {
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 20px;
-    margin-top: 40px;
-    padding: 20px;
 }
 
-.pagination-btn {
-    background-color: var(--nepal-blue);
-    color: white;
-    padding: 10px 20px;
+.pagination-btn-modern {
+    padding: 12px 20px;
+    border: 2px solid var(--border-color);
+    background: var(--card-bg);
+    color: var(--text-primary);
     text-decoration: none;
-    border-radius: 5px;
-    transition: background-color 0.3s ease;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.pagination-btn:hover {
-    background-color: #002a70;
+.pagination-btn-modern:hover,
+.pagination-btn-modern.prev-btn,
+.pagination-btn-modern.next-btn {
+    background: var(--nepal-blue);
+    color: white;
+    border-color: var(--nepal-blue);
 }
 
-.pagination-info {
-    font-weight: bold;
-    color: var(--nepal-blue);
+.pagination-numbers-modern {
+    display: flex;
+    gap: 8px;
 }
 
-.no-results {
+.pagination-number-modern {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--border-color);
+    border-radius: 6px;
+    text-decoration: none;
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+}
+
+.pagination-number-modern:hover,
+.pagination-number-modern.active {
+    background: var(--nepal-blue);
+    color: white;
+    border-color: var(--nepal-blue);
+}
+
+/* No Results */
+.no-results-modern {
     text-align: center;
-    padding: 60px 20px;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    padding: 80px 40px;
 }
 
-.no-results h3 {
-    color: var(--nepal-blue);
-    margin-bottom: 15px;
+.no-results-icon-modern {
+    font-size: 4em;
+    color: #ddd;
+    margin-bottom: 20px;
 }
 
-.no-results p {
-    color: #666;
-    margin-bottom: 25px;
+.no-results-modern h3 {
+    color: var(--text-primary);
+    font-size: 1.8em;
+    margin-bottom: 10px;
+}
+
+.no-results-modern p {
+    color: var(--text-secondary);
     font-size: 1.1em;
+    margin-bottom: 30px;
 }
 
-.button {
+.no-results-actions-modern .action-primary-btn {
     display: inline-block;
-    background-color: var(--nepal-crimson);
+    background: var(--nepal-blue);
     color: white;
-    padding: 12px 25px;
-    border-radius: 5px;
+    padding: 15px 30px;
+    border-radius: 8px;
     text-decoration: none;
-    font-weight: bold;
-    transition: background-color 0.3s ease;
+    font-weight: 600;
+    transition: all 0.3s ease;
 }
 
-.button:hover {
-    background-color: var(--nepal-border);
+.no-results-actions-modern .action-primary-btn:hover {
+    background: var(--nepal-crimson);
+    transform: translateY(-2px);
 }
 
-@media (max-width: 768px) {
-    .filter-row {
-        grid-template-columns: 1fr;
+/* Toast */
+.toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 16px 20px;
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    z-index: 10000;
+    display: none;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+.toast-success {
+    background: #28a745;
+}
+
+.toast-error {
+    background: #dc3545;
+}
+
+.toast-info {
+    background: var(--nepal-blue);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .search-fields {
+        flex-direction: column;
+        align-items: stretch;
     }
 
-    .filter-actions {
+    .filter-select {
+        flex: none;
+        width: 100%;
+    }
+
+    .search-btn-modern {
         justify-content: center;
     }
 
-    .results-summary {
+    .property-listing.grid-mode {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    }
+
+    .controls-bar {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .list-card {
+        flex-direction: column;
+    }
+
+    .list-card .property-media {
+        width: 100%;
+        height: 200px;
+    }
+}
+
+@media (max-width: 768px) {
+    .modern-property-system {
+        padding: 15px;
+    }
+
+    .system-header h1 {
+        font-size: 2.2em;
+    }
+
+    .filters-grid-modern {
+        grid-template-columns: 1fr;
+    }
+
+    .left-controls,
+    .right-controls {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .results-info {
         flex-direction: column;
         gap: 15px;
         text-align: center;
     }
 
-    .property-list.grid-view {
-        grid-template-columns: 1fr;
+    .pagination-controls-modern {
+        flex-direction: column;
+        gap: 15px;
     }
 }
+
+@media (max-width: 480px) {
+    .search-container {
+        padding: 20px;
+    }
+
+    .system-header {
+        padding: 20px;
+    }
+
+    .system-header h1 {
+        font-size: 1.8em;
+    }
+
+    .property-title-modern {
+        font-size: 1.1em;
+    }
+
+    .list-card .property-meta,
+    .list-card .property-specifics {
+        flex-direction: column;
+    }
+}
+
+/* Map View Styling */
+.property-map-container {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.property-map {
+    width: 100%;
+    height: 600px;
+    border-radius: 12px;
+    border: 2px solid var(--border-color);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+/* Custom Marker Styles */
+.custom-marker {
+    background: transparent;
+    border: none;
+}
+
+/* Property Popup Styles */
+.property-popup .leaflet-popup-content-wrapper {
+    background-color: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    padding: 0;
+    border: 2px solid var(--border-color);
+}
+
+.property-popup .leaflet-popup-content {
+    margin: 0;
+    line-height: 1.4;
+}
+
+.property-popup .leaflet-popup-tip {
+    background-color: var(--card-bg);
+    border: 2px solid var(--border-color);
+    border-top: none;
+}
+
+/* Accessibility */
+.property-card-modern:focus-within,
+.filter-toggle-btn:focus,
+.view-mode-btn:focus,
+.search-btn-modern:focus {
+    outline: 2px solid var(--nepal-blue);
+    outline-offset: 2px;
+}
 </style>
+
 {% endblock %}

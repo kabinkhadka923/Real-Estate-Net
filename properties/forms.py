@@ -1,5 +1,6 @@
 from django import forms
-from .models import Property, PropertyType, Amenity
+from django.forms import modelformset_factory
+from .models import Property, PropertyType, Amenity, Image
 
 class PropertySearchForm(forms.Form):
     query = forms.CharField(max_length=255, required=False, label='Keywords')
@@ -20,17 +21,88 @@ class PropertySearchForm(forms.Form):
     zoning = forms.CharField(max_length=100, required=False, label='Zoning')
 
 class PropertyForm(forms.ModelForm):
+    # Add location fields separately since they're related to the Location model
+    latitude = forms.DecimalField(
+        max_digits=10,
+        decimal_places=8,
+        required=False,
+        widget=forms.HiddenInput(),
+        help_text="Latitude coordinate from map"
+    )
+    longitude = forms.DecimalField(
+        max_digits=11,
+        decimal_places=8,
+        required=False,
+        widget=forms.HiddenInput(),
+        help_text="Longitude coordinate from map"
+    )
+
     class Meta:
         model = Property
         fields = [
-            'title', 'description', 'property_type', 'address', 'city', 'state', 
-            'zip_code', 'country', 'price', 'square_footage', 'lot_size', 
-            'year_built', 'zoning', 'status', 'amenities', 'cap_rate', 'noi', 
-            'rent_roll', 'expense_summaries', 'broker_name', 'broker_email', 
+            'title', 'description', 'property_type', 'address', 'city', 'state',
+            'zip_code', 'country', 'price', 'square_footage', 'lot_size',
+            'year_built', 'zoning', 'status', 'amenities', 'cap_rate', 'noi',
+            'rent_roll', 'expense_summaries', 'broker_name', 'broker_email',
             'broker_phone', 'virtual_tour_url', 'floor_plan_image'
         ]
         widgets = {
             'description': forms.Textarea(attrs={'rows': 4}),
             'rent_roll': forms.Textarea(attrs={'rows': 4}),
             'expense_summaries': forms.Textarea(attrs={'rows': 4}),
+            'amenities': forms.Textarea(attrs={
+                'rows': 3,
+                'placeholder': 'Enter amenities (one per line or comma-separated):\n• Swimming Pool\n• Gym, Parking\n• Garden, Security'
+            }),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Set initial values for lat/lng if property has location
+        if self.instance and self.instance.location:
+            self.fields['latitude'].initial = self.instance.location.latitude
+            self.fields['longitude'].initial = self.instance.location.longitude
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+
+        # Handle location data
+        latitude = self.cleaned_data.get('latitude')
+        longitude = self.cleaned_data.get('longitude')
+
+        if latitude and longitude:
+            from .models import Location
+            # Try to find existing location or create new one
+            location, created = Location.objects.get_or_create(
+                latitude=latitude,
+                longitude=longitude,
+                defaults={
+                    'name': f"{latitude},{longitude}",
+                    'type': 'address',
+                }
+            )
+            instance.location = location
+
+        if commit:
+            instance.save()
+        return instance
+
+class ImageForm(forms.ModelForm):
+    class Meta:
+        model = Image
+        fields = ['image', 'caption']
+        widgets = {
+            'image': forms.ClearableFileInput(attrs={
+                'accept': 'image/*'
+            }),
+        }
+
+# Create formset for multiple images
+ImageFormSet = modelformset_factory(
+    Image,
+    form=ImageForm,
+    fields=['image', 'caption'],
+    extra=1,  # Allow 1 blank form for single image upload
+    can_delete=True,
+    max_num=1  # Maximum 1 image
+)

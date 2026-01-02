@@ -84,7 +84,7 @@ class Property(models.Model):
     year_built = models.IntegerField(blank=True, null=True)
     zoning = models.CharField(max_length=100, blank=True, null=True)
     status = models.CharField(max_length=20, choices=PROPERTY_STATUS_CHOICES, default='for_sale')
-    amenities = models.ManyToManyField(Amenity, blank=True)
+    amenities = models.TextField(blank=True, null=True, help_text="Enter custom amenities (one per line or comma-separated)")
     
     # Financial Data
     cap_rate = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)

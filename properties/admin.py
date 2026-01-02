@@ -1,12 +1,21 @@
 from django.contrib import admin
 from django.utils import timezone
 from django.utils.html import format_html
-from django.urls import path
+from django.urls import path, reverse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+from django.core.serializers.json import DjangoJSONEncoder
+from django.core.paginator import Paginator
+from django.db.models import Count, Sum, Avg, Q
+from django.contrib import messages
 import json
+import csv
+import datetime
 from .models import Property, PropertyType, Amenity, Image, SavedSearch, Company, Location
 
 @admin.register(Property)
@@ -226,16 +235,14 @@ class PropertyAdmin(admin.ModelAdmin):
     def get_actions(self, request):
         """Only show delete action to superusers"""
         actions = super().get_actions(request)
-        if not request.user.is_superuser:
+        if not request.user.user_type == 'super_admin':
             if 'delete_selected_properties' in actions:
                 del actions['delete_selected_properties']
         return actions
 
     def has_delete_permission(self, request, obj=None):
         """Only superusers can delete properties"""
-        if request.user.is_superuser:
-            return True
-        return False
+        return request.user.user_type == 'super_admin'
 
     def mark_as_verified(self, request, queryset):
         queryset.update(is_verified=True)

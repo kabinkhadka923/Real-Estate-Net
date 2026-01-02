@@ -26,13 +26,21 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize map only if map element exists
     const mapElement = document.getElementById('map');
     if (mapElement) {
-        initializeMap();
+        try {
+            initializeMap();
+        } catch (error) {
+            console.error('Error initializing map:', error);
+        }
     }
 
     // Initialize property carousel if it exists
     const carousel = document.querySelector('.carousel');
     if (carousel) {
-        initializeCarousel();
+        try {
+            initializeCarousel();
+        } catch (error) {
+            console.error('Error initializing carousel:', error);
+        }
     }
 
     // Add mobile touch support for dropdown

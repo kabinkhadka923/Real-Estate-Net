@@ -20,6 +20,9 @@ from properties.views import home
 from accounts import views
 from django.conf import settings
 from django.conf.urls.static import static
+from django.http import HttpResponsePermanentRedirect
+from django.views.generic import RedirectView
+from . import admin_views
 
 # Custom admin site with full access for superusers
 class SecureAdminSite(admin.AdminSite):
@@ -35,8 +38,11 @@ class SecureAdminSite(admin.AdminSite):
         }
 
     def has_permission(self, request):
-        # Allow superusers full access
-        return request.user.is_superuser
+        # Allow superusers and normal admins full access
+        return request.user.is_authenticated and (
+            request.user.is_superuser or
+            request.user.user_type in ['super_admin', 'admin']
+        )
 
     def each_context(self, request):
         context = super().each_context(request)
@@ -168,10 +174,14 @@ secure_admin.register(BlogPost)
 secure_admin.register(PageView)
 
 urlpatterns = [
-    path('real-admin/', secure_admin.urls),  # Real Estate Admin Panel
+    path('favicon.ico', lambda r: HttpResponsePermanentRedirect('/static/logo.png')),  # Favicon redirect
+
+    path('real-admin/', secure_admin.urls),  # Super Admin Panel (Full Access)
+    path('net-admin/', include('accounts.urls', namespace='normal_admin')),  # Normal Admin Panel (Limited Access)
 
     # Unified Account URLs - Minimal allauth for social auth
     path('accounts/', include([
+        path('signup/', RedirectView.as_view(url='/accounts/register/', permanent=True), name='account_signup'),
         path('', include('allauth.urls')),  # Required for social authentication
         path('', include('accounts.urls', namespace='accounts')),
         # Main registration endpoint
@@ -187,12 +197,32 @@ urlpatterns = [
     path('contact/', include('contact.urls', namespace='contact')),
     path('blog/', include('blog.urls', namespace='blog')),
     path('legal/', include('legal.urls', namespace='legal')),
+
+    # Custom Admin URLs
+    path('admin/dashboard/', admin_views.admin_dashboard, name='admin_dashboard'),
+    path('admin/users/', admin_views.admin_users, name='admin_users'),
+    path('admin/properties/', admin_views.admin_properties, name='admin_properties'),
+    path('admin/pending/', admin_views.admin_pending, name='admin_pending'),
+    path('admin/featured/', admin_views.admin_featured, name='admin_featured'),
+    path('admin/agents/', admin_views.admin_agents, name='admin_agents'),
+    path('admin/companies/', admin_views.admin_companies, name='admin_companies'),
+    path('admin/payments/', admin_views.admin_payments, name='admin_payments'),
+    path('admin/reports/', admin_views.admin_reports, name='admin_reports'),
+    path('admin/blog/', admin_views.admin_blog, name='admin_blog'),
+    path('admin/cms/', admin_views.admin_cms, name='admin_cms'),
+    path('admin/settings/', admin_views.admin_settings, name='admin_settings'),
+    path('admin/permission-requests/', admin_views.admin_permission_requests, name='admin_permission_requests'),
+
+    # Detail views
+    path('admin/property/<int:property_id>/', admin_views.admin_property_detail, name='admin_property_detail'),
+    path('admin/user/<int:user_id>/', admin_views.admin_user_detail, name='admin_user_detail'),
+    path('admin/agent/<int:agent_id>/', admin_views.admin_agent_detail, name='admin_agent_detail'),
+
+    path('admin/api/', include('adminapi.urls', namespace='adminapi')),
     path('', home, name='home'),
 ]
 
-# Only include default admin if explicitly enabled
-if settings.ADMIN_ENABLED and not settings.ADMIN_RESTRICTED_ACCESS:
-    urlpatterns.insert(0, path('admin/', admin.site.urls))
+# Django admin is now integrated into net-admin panel - no separate /admin/ URL
 
 # Serve media and static files during development and tunneling
 if settings.DEBUG or getattr(settings, 'SERVEO_TUNNEL_ACTIVE', False):

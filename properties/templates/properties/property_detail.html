@@ -14,12 +14,12 @@
 {% block og_url %}{{ request.build_absolute_uri }}{% endblock %}
 {% block og_title %}{{ property.title }} - NPR {{ property.price|intcomma }}{% endblock %}
 {% block og_description %}{{ property.description|truncatechars:200 }}{% endblock %}
-{% block og_image %}{% if property.images.exists %}{{ property.images.first.image.url }}{% elif property.floor_plan_image %}{{ property.floor_plan_image.url }}{% else %}{% static 'images/logo.jpeg' %}{% endif %}{% endblock %}
+{% block og_image %}{% if property.images.exists %}{{ property.images.first.image.url }}{% elif property.floor_plan_image %}{{ property.floor_plan_image.url }}{% else %}{% static 'logo.png' %}{% endif %}{% endblock %}
 
 {% block twitter_card %}summary_large_image{% endblock %}
 {% block twitter_title %}🏠 {{ property.title }} - NPR {{ property.price|intcomma }}{% endblock %}
 {% block twitter_description %}{{ property.city }}, {{ property.state }} - {{ property.property_type }} | Area: {% if property.square_footage %}{{ property.square_footage }} sq ft{% else %}Contact for details{% endif %}{% endblock %}
-{% block twitter_image %}{% if property.images.exists %}{{ property.images.first.image.url }}{% elif property.floor_plan_image %}{{ property.floor_plan_image.url }}{% else %}{% static 'images/logo.jpeg' %}{% endif %}{% endblock %}
+{% block twitter_image %}{% if property.images.exists %}{{ property.images.first.image.url }}{% elif property.floor_plan_image %}{{ property.floor_plan_image.url }}{% else %}{% static 'logo.png' %}{% endif %}{% endblock %}
 
 {% block content %}
 <div class="property-detail-container">
@@ -125,12 +125,14 @@
                 <p>{{ property.description }}</p>
             </div>
 
-            {% if property.amenities.all %}
+            {% if amenities_list %}
             <div class="amenities-section">
                 <h3>Amenities</h3>
                 <div class="amenities-grid">
-                    {% for amenity in property.amenities.all %}
-                    <div class="amenity-item">{{ amenity.name }}</div>
+                    {% for amenity in amenities_list %}
+                        {% if amenity %}
+                        <div class="amenity-item">{{ amenity|capfirst }}</div>
+                        {% endif %}
                     {% endfor %}
                 </div>
             </div>

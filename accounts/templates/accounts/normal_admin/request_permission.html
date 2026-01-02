@@ -1,0 +1,167 @@
+{% extends "accounts/normal_admin/base.html" %}
+{% load static %}
+
+{% block title %}Request Permission - Normal Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">Request Additional Permissions</h1>
+            <p class="text-muted">Request access to additional admin features</p>
+        </div>
+        <a href="{% url 'normal_admin:normal_admin_profile' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Profile
+        </a>
+    </div>
+
+    <!-- Available Permissions -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Available Permissions</h6>
+                </div>
+                <div class="card-body">
+                    {% if available_permissions %}
+                        <div class="row">
+                            {% for perm in available_permissions %}
+                            <div class="col-md-6 mb-4">
+                                <div class="card border-left-info h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">
+                                            <i class="fas fa-key text-info"></i> {{ perm.name }}
+                                        </h5>
+                                        <p class="card-text text-muted small">
+                                            {% if perm.key == 'manage_users' %}
+                                                Can view, edit, and manage all user accounts (buyers, agents, brokers)
+                                            {% elif perm.key == 'manage_properties' %}
+                                                Can approve, reject, and manage property listings
+                                            {% elif perm.key == 'manage_payments' %}
+                                                Can view and manage payment transactions and subscriptions
+                                            {% elif perm.key == 'manage_premium' %}
+                                                Can manage premium features and user subscriptions
+                                            {% elif perm.key == 'manage_content' %}
+                                                Can create and edit website content and pages
+                                            {% elif perm.key == 'view_logs' %}
+                                                Can view system logs and admin activity
+                                            {% elif perm.key == 'export_data' %}
+                                                Can export user data and system reports
+                                            {% elif perm.key == 'delete_data' %}
+                                                Can delete user accounts and associated data
+                                            {% elif perm.key == 'system_settings' %}
+                                                Can modify system configuration and settings
+                                            {% endif %}
+                                        </p>
+
+                                        {% if perm.has_pending %}
+                                            <div class="alert alert-warning" role="alert">
+                                                <small><i class="fas fa-clock"></i> You have a pending request for this permission.</small>
+                                            </div>
+                                        {% else %}
+                                            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                                                    data-bs-target="#requestModal" data-permission="{{ perm.key }}"
+                                                    data-name="{{ perm.name }}">
+                                                <i class="fas fa-plus"></i> Request Access
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                            <h5 class="text-success">All Permissions Granted</h5>
+                            <p class="text-muted">You currently have access to all available admin permissions.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Instructions -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-left-warning">
+                <div class="card-body">
+                    <h6 class="card-title"><i class="fas fa-info-circle text-warning"></i> How Permission Requests Work</h6>
+                    <ul class="mb-0">
+                        <li>Submit a detailed request explaining why you need the permission</li>
+                        <li>Include how you will use the permission responsibly</li>
+                        <li>Super Admin will review your request and respond via notification</li>
+                        <li>You can only have one pending request per permission type</li>
+                        <li>All permission changes are logged for security and auditing</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Request Modal -->
+<div class="modal fade" id="requestModal" tabindex="-1" aria-labelledby="requestModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="requestModalLabel">Request Permission Access</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="permission_type" id="permissionType">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="permissionName" class="form-label">Permission</label>
+                        <input type="text" class="form-control" id="permissionName" readonly>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="reason" class="form-label">Why do you need this permission? <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="reason" name="reason" rows="3" required
+                                  placeholder="Explain the specific tasks or responsibilities that require this permission"></textarea>
+                        <div class="form-text">Be specific about your role and responsibilities</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="justification" class="form-label">How will you use this permission responsibly? <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="justification" name="justification" rows="3" required
+                                  placeholder="Describe how you will ensure data security and follow best practices"></textarea>
+                        <div class="form-text">Explain your commitment to responsible use</div>
+                    </div>
+
+                    <div class="alert alert-info" role="alert">
+                        <small>
+                            <i class="fas fa-info-circle"></i>
+                            Your request will be reviewed by the Super Admin. You will receive a notification once a decision is made.
+                        </small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Submit Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Handle modal data
+document.addEventListener('DOMContentLoaded', function() {
+    const requestModal = document.getElementById('requestModal');
+    requestModal.addEventListener('show.bs.modal', function(event) {
+        const button = event.relatedTarget;
+        const permission = button.getAttribute('data-permission');
+        const name = button.getAttribute('data-name');
+
+        document.getElementById('permissionType').value = permission;
+        document.getElementById('permissionName').value = name;
+        document.getElementById('requestModalLabel').textContent = `Request ${name} Access`;
+    });
+});
+</script>
+{% endblock %}

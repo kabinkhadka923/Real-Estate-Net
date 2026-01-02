@@ -1,0 +1,116 @@
+{% extends "accounts/normal_admin/base.html" %}
+{% load static %}
+
+{% block title %}Users Management - Normal Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">Users Management</h1>
+            <p class="text-muted">Manage user accounts and permissions</p>
+        </div>
+        <div class="d-flex gap-2">
+            <span class="badge bg-info">Total Users: {{ users|length }}</span>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="card shadow">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">User Accounts</h6>
+        </div>
+        <div class="card-body">
+            {% if users %}
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="usersTable">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>User Type</th>
+                                <th>Status</th>
+                                <th>Joined</th>
+                                <th>Properties</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr>
+                                <td>
+                                    <strong>{{ user.username }}</strong>
+                                    {% if user.get_full_name %}
+                                        <br><small class="text-muted">{{ user.get_full_name }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>{{ user.email }}</td>
+                                <td>
+                                    <span class="badge bg-{% if user.user_type == 'agent' %}primary{% elif user.user_type == 'broker' %}success{% else %}secondary{% endif %}">
+                                        {{ user.user_type|title }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if user.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Inactive</span>
+                                    {% endif %}
+                                    {% if user.is_verified %}
+                                        <span class="badge bg-info">Verified</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ user.date_joined|date:"M d, Y" }}</td>
+                                <td>
+                                    <span class="badge bg-primary">{{ user.properties.count }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No Users Found</h5>
+                    <p class="text-muted">There are no users to manage at this time.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Instructions -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-left-info">
+                <div class="card-body">
+                    <h6 class="card-title"><i class="fas fa-info-circle text-info"></i> User Management Notes</h6>
+                    <ul class="mb-0">
+                        <li>You can only view basic user information</li>
+                        <li>User deactivation/activation requires Super Admin approval</li>
+                        <li>All user management actions are logged for security</li>
+                        <li>Contact Super Admin for advanced user management</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Initialize DataTable
+$(document).ready(function() {
+    $('#usersTable').DataTable({
+        "pageLength": 25,
+        "ordering": true,
+        "searching": true,
+        "responsive": true,
+        "language": {
+            "search": "Search users:",
+            "lengthMenu": "Show _MENU_ users per page",
+            "info": "Showing _START_ to _END_ of _TOTAL_ users"
+        }
+    });
+});
+</script>
+{% endblock %}

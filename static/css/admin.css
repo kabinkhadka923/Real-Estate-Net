@@ -1,0 +1,486 @@
+/* Real Estate Net Admin CSS - Nepal Flag Theme */
+/* Brand Color Variables */
+:root {
+    --nepal-blue: #0033A0;
+    --nepal-crimson: #DC143C;
+    --nepal-white: #FFFFFF;
+    --nepal-border: #B20C2F;
+    --text-dark: #333;
+    --text-light: #fff;
+    --bg-light: #f8f9fa;
+    --bg-white: #FFFFFF;
+    --shadow-light: rgba(0, 0, 0, 0.1);
+    --sidebar-bg: var(--nepal-blue);
+    --sidebar-text: var(--nepal-white);
+    --primary-gradient: linear-gradient(135deg, var(--nepal-blue), var(--nepal-crimson));
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --info-color: #17a2b8;
+}
+
+/* Base Admin Styles */
+.admin-body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-light);
+    color: var(--text-dark);
+    line-height: 1.6;
+}
+
+/* Sidebar Styles */
+.sidebar {
+    background: var(--sidebar-bg) !important;
+    color: var(--sidebar-text) !important;
+    min-width: 250px;
+    max-width: 300px;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+}
+
+.sidebar .nav-link {
+    color: var(--sidebar-text) !important;
+    padding: 12px 20px;
+    border-radius: 8px;
+    margin: 2px 10px;
+    transition: all 0.3s ease;
+}
+
+.sidebar .nav-link:hover {
+    background: rgba(255,255,255,0.1) !important;
+    color: var(--nepal-white) !important;
+    transform: translateX(5px);
+}
+
+.sidebar .nav-link.active {
+    background: var(--nepal-crimson) !important;
+    color: var(--nepal-white) !important;
+}
+
+/* Topbar Styles */
+.navbar {
+    background: var(--primary-gradient) !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.navbar-brand {
+    color: var(--nepal-white) !important;
+    font-weight: 700;
+    font-size: 1.5em;
+}
+
+.navbar-brand:hover {
+    color: var(--nepal-white) !important;
+}
+
+/* Content Area */
+.content {
+    margin-left: 260px;
+    padding: 24px;
+    background: var(--bg-light);
+}
+
+/* Card Styles */
+.card {
+    border: none !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08) !important;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12) !important;
+}
+
+.card-header {
+    background: var(--primary-gradient) !important;
+    color: var(--nepal-white) !important;
+    border-radius: 12px 12px 0 0 !important;
+    border: none !important;
+    font-weight: 600;
+}
+
+/* Button Styles */
+.btn-primary {
+    background: var(--primary-gradient) !important;
+    border: none !important;
+    color: var(--nepal-white) !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    transition: all 0.3s ease !important;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, var(--nepal-crimson), var(--nepal-blue)) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 15px rgba(0,51,160,0.3) !important;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #28a745, #20c997) !important;
+    border: none !important;
+    color: white !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #218838, #17a2b8) !important;
+    transform: translateY(-1px) !important;
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, #ffc107, #fd7e14) !important;
+    border: none !important;
+    color: #333 !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+}
+
+.btn-warning:hover {
+    background: linear-gradient(135deg, #e0a800, #d39e00) !important;
+    transform: translateY(-1px) !important;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, var(--nepal-crimson), #c82333) !important;
+    border: none !important;
+    color: white !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+}
+
+.btn-danger:hover {
+    background: linear-gradient(135deg, #c82333, #a02622) !important;
+    transform: translateY(-1px) !important;
+}
+
+.btn-info {
+    background: linear-gradient(135deg, #17a2b8, #138496) !important;
+    border: none !important;
+    color: white !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+}
+
+.btn-info:hover {
+    background: linear-gradient(135deg, #138496, #117a8b) !important;
+    transform: translateY(-1px) !important;
+}
+
+/* Stats Cards */
+.card-stats {
+    background: var(--primary-gradient) !important;
+    color: var(--nepal-white) !important;
+    border-radius: 12px !important;
+    padding: 20px !important;
+    text-align: center !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1) !important;
+    transition: transform 0.3s ease !important;
+    min-height: 120px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+}
+
+.card-stats:hover {
+    transform: translateY(-5px) !important;
+    box-shadow: 0 8px 30px rgba(0,51,160,0.2) !important;
+}
+
+.card-stats h3 {
+    margin: 0 0 10px 0 !important;
+    font-size: 2.5em !important;
+    color: var(--nepal-white) !important;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3) !important;
+    font-weight: 700 !important;
+}
+
+.card-stats p {
+    margin: 0 !important;
+    opacity: 0.9 !important;
+    font-size: 0.9em !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    font-weight: 500 !important;
+}
+
+/* Table Styles */
+.table {
+    border-radius: 8px !important;
+    overflow: hidden !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05) !important;
+}
+
+.table thead th {
+    background: var(--primary-gradient) !important;
+    color: var(--nepal-white) !important;
+    border: none !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    font-size: 0.85em !important;
+}
+
+.table tbody tr:hover {
+    background: rgba(0,51,160,0.05) !important;
+}
+
+.table .badge {
+    font-size: 0.75em !important;
+    padding: 6px 10px !important;
+    border-radius: 20px !important;
+}
+
+/* Badge Styles */
+.badge-premium {
+    background: linear-gradient(135deg, var(--nepal-crimson), #ff6b6b) !important;
+    color: var(--nepal-white) !important;
+    padding: 4px 12px !important;
+    border-radius: 15px !important;
+    font-size: 0.8em !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    box-shadow: 0 2px 4px rgba(220, 20, 60, 0.3) !important;
+}
+
+/* Form Styles */
+.form-control {
+    border: 2px solid #e9ecef !important;
+    border-radius: 8px !important;
+    padding: 12px 15px !important;
+    font-size: 1em !important;
+    transition: border-color 0.3s ease !important;
+}
+
+.form-control:focus {
+    border-color: var(--nepal-blue) !important;
+    box-shadow: 0 0 0 3px rgba(0, 51, 160, 0.1) !important;
+    outline: none !important;
+}
+
+.form-label {
+    color: var(--nepal-blue) !important;
+    font-weight: 600 !important;
+    margin-bottom: 8px !important;
+}
+
+/* Modal Styles */
+.modal-content {
+    border-radius: 12px !important;
+    border: none !important;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2) !important;
+}
+
+.modal-header {
+    background: var(--primary-gradient) !important;
+    color: var(--nepal-white) !important;
+    border-radius: 12px 12px 0 0 !important;
+    border: none !important;
+}
+
+/* Alert Styles */
+.alert {
+    border-radius: 8px !important;
+    border: none !important;
+}
+
+.alert-success {
+    background: linear-gradient(135deg, #d4edda, #c3e6cb) !important;
+    color: #155724 !important;
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, #f8d7da, #f5c6cb) !important;
+    color: #721c24 !important;
+}
+
+.alert-warning {
+    background: linear-gradient(135deg, #fff3cd, #ffeaa7) !important;
+    color: #856404 !important;
+}
+
+.alert-info {
+    background: linear-gradient(135deg, #d1ecf1, #bee5eb) !important;
+    color: #0c5460 !important;
+}
+
+/* Pagination */
+.pagination .page-link {
+    color: var(--nepal-blue) !important;
+    border-color: var(--nepal-blue) !important;
+    border-radius: 6px !important;
+    margin: 0 2px !important;
+}
+
+.pagination .page-link:hover {
+    background: var(--nepal-blue) !important;
+    color: var(--nepal-white) !important;
+}
+
+.pagination .page-item.active .page-link {
+    background: var(--primary-gradient) !important;
+    border-color: var(--nepal-blue) !important;
+}
+
+/* Loading Spinner */
+.spinner-border {
+    color: var(--nepal-blue) !important;
+}
+
+/* Progress Bars */
+.progress {
+    height: 8px !important;
+    border-radius: 4px !important;
+}
+
+.progress-bar {
+    background: var(--primary-gradient) !important;
+}
+
+/* Dropdown Styles */
+.dropdown-menu {
+    border-radius: 8px !important;
+    border: none !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1) !important;
+}
+
+.dropdown-item:hover {
+    background: rgba(0,51,160,0.1) !important;
+    color: var(--nepal-blue) !important;
+}
+
+/* Tab Styles */
+.nav-tabs .nav-link {
+    border: none !important;
+    color: var(--text-dark) !important;
+    font-weight: 500 !important;
+}
+
+.nav-tabs .nav-link.active {
+    background: var(--primary-gradient) !important;
+    color: var(--nepal-white) !important;
+    border-radius: 8px 8px 0 0 !important;
+}
+
+/* Chart Containers */
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+/* Responsive Design */
+@media (max-width: 991px) {
+    .sidebar {
+        position: relative;
+        width: 100%;
+        min-width: auto;
+        max-width: none;
+    }
+
+    .content {
+        margin-left: 0;
+    }
+
+    .navbar-toggler {
+        border-color: rgba(255,255,255,0.1) !important;
+    }
+
+    .navbar-toggler-icon {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.5%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .content {
+        padding: 15px;
+    }
+
+    .card-stats {
+        min-height: 100px !important;
+        padding: 15px !important;
+    }
+
+    .card-stats h3 {
+        font-size: 2em !important;
+    }
+
+    .btn {
+        font-size: 0.9em !important;
+        padding: 8px 16px !important;
+    }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-light);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--nepal-blue);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--nepal-crimson);
+}
+
+/* Animation Classes */
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.slide-in-left {
+    animation: slideInLeft 0.5s ease-out;
+}
+
+@keyframes slideInLeft {
+    from { opacity: 0; transform: translateX(-30px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+/* Utility Classes */
+.text-nepal-blue { color: var(--nepal-blue) !important; }
+.text-nepal-crimson { color: var(--nepal-crimson) !important; }
+.bg-nepal-blue { background: var(--nepal-blue) !important; }
+.bg-nepal-crimson { background: var(--nepal-crimson) !important; }
+.border-nepal-blue { border-color: var(--nepal-blue) !important; }
+.border-nepal-crimson { border-color: var(--nepal-crimson) !important; }
+
+/* Focus States for Accessibility */
+.btn:focus,
+.form-control:focus,
+.nav-link:focus {
+    outline: 2px solid var(--nepal-blue) !important;
+    outline-offset: 2px !important;
+}
+
+/* Print Styles */
+@media print {
+    .sidebar,
+    .navbar,
+    .btn,
+    .modal {
+        display: none !important;
+    }
+
+    .content {
+        margin-left: 0 !important;
+        padding: 0 !important;
+    }
+
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+    }
+}

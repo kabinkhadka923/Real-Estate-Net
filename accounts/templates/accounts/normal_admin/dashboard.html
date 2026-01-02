@@ -1,0 +1,487 @@
+{% extends "accounts/normal_admin/base.html" %}
+{% load static %}
+
+{% block title %}Dashboard - Normal Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">🏠 Normal Admin Dashboard</h1>
+            <p class="text-muted">Welcome back, {{ user.get_full_name|default:user.username }}</p>
+        </div>
+        <div class="text-end">
+            <small class="text-muted">Last login: {{ user.last_login|date:"M d, Y H:i" }}</small>
+        </div>
+    </div>
+
+    <!-- Permission Warning -->
+    <div class="alert alert-info" role="alert">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Limited Access:</strong> You have restricted permissions as a Normal Admin.
+        Contact Super Admin for additional access.
+    </div>
+
+    <!-- Admin Notifications -->
+    {% if notifications %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-warning">
+                        <i class="fas fa-bell me-2"></i>Notifications
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% for notification in notifications %}
+                    <div class="alert alert-{% if notification.priority == 'high' %}warning{% elif notification.priority == 'critical' %}danger{% else %}info{% endif %} alert-dismissible fade show" role="alert">
+                        <strong>{{ notification.title }}</strong>
+                        <p class="mb-0">{{ notification.message }}</p>
+                        <small class="text-muted">{{ notification.created_at|timesince }} ago</small>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Key Metrics Overview -->
+    <div class="row mb-4">
+        <!-- My Performance -->
+        <div class="col-xl-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-user-tie me-2"></i>My Performance
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-sm-6 mb-3">
+                            <div class="text-center">
+                                <div class="h4 mb-0 font-weight-bold text-primary">{{ stats.properties_managed }}</div>
+                                <small class="text-muted">Properties Managed</small>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 mb-3">
+                            <div class="text-center">
+                                <div class="h4 mb-0 font-weight-bold text-success">{{ stats.inquiries_handled }}</div>
+                                <small class="text-muted">Inquiries Handled</small>
+                            </div>
+                        </div>
+                        {% if permissions.manage_properties %}
+                        <div class="col-sm-6 mb-3">
+                            <div class="text-center">
+                                <div class="h4 mb-0 font-weight-bold text-warning">{{ stats.pending_reviews }}</div>
+                                <small class="text-muted">Pending Reviews</small>
+                            </div>
+                        </div>
+                        {% endif %}
+                        <div class="col-sm-6 mb-3">
+                            <div class="text-center">
+                                <div class="h4 mb-0 font-weight-bold text-info">{{ stats.recent_activity }}</div>
+                                <small class="text-muted">Recent Activities</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Overview -->
+        <div class="col-xl-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-success">
+                        <i class="fas fa-chart-line me-2"></i>System Overview
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-sm-6 mb-3">
+                            <div class="text-center">
+                                <div class="h4 mb-0 font-weight-bold text-secondary">{{ total_stats.total_properties|default:0 }}</div>
+                                <small class="text-muted">Total Properties</small>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 mb-3">
+                            <div class="text-center">
+                                <div class="h4 mb-0 font-weight-bold text-dark">{{ total_stats.total_users|default:0 }}</div>
+                                <small class="text-muted">Total Users</small>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 mb-3">
+                            <div class="text-center">
+                                <div class="h4 mb-0 font-weight-bold text-warning">{{ total_stats.active_premium|default:0 }}</div>
+                                <small class="text-muted">Active Premium</small>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 mb-3">
+                            <div class="text-center">
+                                <div class="h4 mb-0 font-weight-bold text-danger">{{ total_stats.unresolved_inquiries|default:0 }}</div>
+                                <small class="text-muted">Open Inquiries</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <!-- Property Status Chart -->
+        <div class="col-xl-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Property Status Overview</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="propertyStatusChart" width="100%" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Type Distribution -->
+        <div class="col-xl-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-success">User Type Distribution</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="userTypeChart" width="100%" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity & Quick Actions Row -->
+    <div class="row mb-4">
+        <!-- Recent Activity -->
+        <div class="col-xl-8 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Recent Activity</h6>
+                </div>
+                <div class="card-body">
+                    {% if recent_activities %}
+                        <div class="timeline">
+                            {% for activity in recent_activities %}
+                            <div class="timeline-item">
+                                <div class="timeline-marker bg-{{ activity.type }}"></div>
+                                <div class="timeline-content">
+                                    <h6 class="timeline-title">{{ activity.action }}</h6>
+                                    <p class="timeline-text">{{ activity.description }}</p>
+                                    <small class="text-muted">{{ activity.timestamp|timesince }} ago</small>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No recent activity to display.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="col-xl-4 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-2">
+                        {% if permissions.manage_properties %}
+                        <div class="col-6">
+                            <a href="{% url 'normal_admin:normal_admin_properties' %}" class="btn btn-primary btn-sm w-100">
+                                <i class="fas fa-home"></i><br>Properties
+                            </a>
+                        </div>
+                        <div class="col-6">
+                            <a href="{% url 'normal_admin:normal_admin_pending' %}" class="btn btn-warning btn-sm w-100">
+                                <i class="fas fa-clock"></i><br>Pending
+                            </a>
+                        </div>
+                        {% endif %}
+
+                        {% if permissions.manage_users %}
+                        <div class="col-6">
+                            <a href="{% url 'normal_admin:normal_admin_users' %}" class="btn btn-success btn-sm w-100">
+                                <i class="fas fa-users"></i><br>Users
+                            </a>
+                        </div>
+                        {% endif %}
+
+                        <div class="col-6">
+                            <a href="{% url 'normal_admin:normal_admin_inquiries' %}" class="btn btn-info btn-sm w-100">
+                                <i class="fas fa-envelope"></i><br>Inquiries
+                            </a>
+                        </div>
+
+                        <div class="col-6">
+                            <a href="{% url 'normal_admin:normal_admin_agents' %}" class="btn btn-secondary btn-sm w-100">
+                                <i class="fas fa-user-tie"></i><br>Agents
+                            </a>
+                        </div>
+
+                        <div class="col-6">
+                            <a href="{% url 'normal_admin:normal_admin_full_reports' %}" class="btn btn-dark btn-sm w-100">
+                                <i class="fas fa-chart-bar"></i><br>Reports
+                            </a>
+                        </div>
+
+                        {% if permissions.manage_content %}
+                        <div class="col-6">
+                            <a href="{% url 'normal_admin:normal_admin_blog' %}" class="btn btn-outline-info btn-sm w-100">
+                                <i class="fas fa-blog"></i><br>Blog
+                            </a>
+                        </div>
+                        {% endif %}
+
+                        {% if permissions.view_logs %}
+                        <div class="col-6">
+                            <a href="{% url 'normal_admin:normal_admin_django_analytics' %}" class="btn btn-outline-warning btn-sm w-100">
+                                <i class="fas fa-chart-line"></i><br>Analytics
+                            </a>
+                        </div>
+                        {% endif %}
+
+                        {% if permissions.system_settings %}
+                        <div class="col-6">
+                            <a href="{% url 'normal_admin:normal_admin_settings' %}" class="btn btn-outline-dark btn-sm w-100">
+                                <i class="fas fa-cogs"></i><br>Settings
+                            </a>
+                        </div>
+                        {% endif %}
+
+                        {% if permissions.export_data %}
+                        <div class="col-6">
+                            <a href="#" onclick="alert('Export functionality coming soon!')" class="btn btn-outline-primary btn-sm w-100">
+                                <i class="fas fa-download"></i><br>Export
+                            </a>
+                        </div>
+                        {% endif %}
+
+                        <div class="col-6">
+                            <a href="{% url 'normal_admin:normal_admin_profile' %}" class="btn btn-outline-secondary btn-sm w-100">
+                                <i class="fas fa-user"></i><br>Profile
+                            </a>
+                        </div>
+
+                        {% if user.user_type == 'super_admin' %}
+                        <div class="col-12">
+                            <a href="{% url 'normal_admin:normal_admin_permission_requests' %}" class="btn btn-danger btn-sm w-100">
+                                <i class="fas fa-key"></i> Permission Requests
+                            </a>
+                        </div>
+                        {% else %}
+                        <div class="col-12">
+                            <a href="{% url 'normal_admin:normal_admin_request_permission' %}" class="btn btn-outline-primary btn-sm w-100">
+                                <i class="fas fa-key"></i> Request Permissions
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Permissions Overview & System Info -->
+    <div class="row">
+        <!-- Permissions Overview -->
+        <div class="col-xl-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Your Permissions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>User Management</h5>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-{{ permissions.manage_users|yesno:'check,text-success,times,text-muted' }}"></i> Manage Users</li>
+                                <li><i class="fas fa-times text-muted"></i> Manage Admins (Super Admin Only)</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Content Management</h5>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-{{ permissions.manage_properties|yesno:'check,text-success,times,text-muted' }}"></i> Manage Properties</li>
+                                <li><i class="fas fa-{{ permissions.manage_premium|yesno:'check,text-success,times,text-muted' }}"></i> Manage Premium</li>
+                                <li><i class="fas fa-{{ permissions.manage_payments|yesno:'check,text-success,times,text-muted' }}"></i> Manage Payments</li>
+                                <li><i class="fas fa-{{ permissions.manage_content|yesno:'check,text-success,times,text-muted' }}"></i> Manage Content</li>
+                                <li><i class="fas fa-times text-muted"></i> System Settings (Super Admin Only)</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="alert alert-light mt-3" role="alert">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle"></i>
+                            These permissions are set by the Super Admin. Contact them to request additional access.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Information -->
+        <div class="col-xl-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-info">System Information</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <strong>Admin Type:</strong><br>
+                            <span class="badge bg-primary">{{ user.get_user_type_display }}</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <strong>Account Status:</strong><br>
+                            <span class="badge bg-{{ user.is_active|yesno:'success,danger' }}">{{ user.is_active|yesno:'Active,Inactive' }}</span>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <strong>Member Since:</strong><br>
+                            <small>{{ user.date_joined|date:"M d, Y" }}</small>
+                        </div>
+                        <div class="col-sm-6">
+                            <strong>Last Login:</strong><br>
+                            <small>{{ user.last_login|date:"M d, Y H:i" }}</small>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <strong>Properties Listed:</strong><br>
+                            <span class="h5 text-primary">{{ user.properties_count }}</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <strong>Premium Status:</strong><br>
+                            <span class="badge bg-{{ user.is_premium_user|yesno:'warning,secondary' }}">{{ user.is_premium_user|yesno:'Premium,Basic' }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js for visualizations -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Property Status Chart
+const propertyStatusCtx = document.getElementById('propertyStatusChart').getContext('2d');
+const propertyStatusChart = new Chart(propertyStatusCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Approved', 'Pending', 'Rejected'],
+        datasets: [{
+            data: [
+                {{ total_stats.verified_properties|default:0 }},
+                {{ total_stats.pending_verifications|default:0 }},
+                {{ total_stats.total_properties|default:0|add:total_stats.verified_properties|default:0|add:total_stats.pending_verifications|default:0 }}
+            ],
+            backgroundColor: ['#28a745', '#ffc107', '#dc3545'],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom',
+            }
+        }
+    }
+});
+
+// User Type Distribution Chart
+const userTypeCtx = document.getElementById('userTypeChart').getContext('2d');
+const userTypeChart = new Chart(userTypeCtx, {
+    type: 'pie',
+    data: {
+        labels: ['Buyers', 'Brokers', 'Agents'],
+        datasets: [{
+            data: [
+                {{ total_stats.total_buyers|default:0 }},
+                {{ total_stats.total_brokers|default:0 }},
+                {{ total_stats.total_agents|default:0 }}
+            ],
+            backgroundColor: ['#007bff', '#28a745', '#ffc107'],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom',
+            }
+        }
+    }
+});
+</script>
+
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e9ecef;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -22px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 2px #e9ecef;
+}
+
+.timeline-content {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    border-left: 4px solid #007bff;
+}
+
+.timeline-title {
+    margin: 0 0 5px 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.timeline-text {
+    margin: 0 0 5px 0;
+    color: #6c757d;
+}
+
+.badge {
+    font-size: 0.75em;
+}
+</style>
+{% endblock %}

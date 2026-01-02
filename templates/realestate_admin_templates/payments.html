@@ -1,0 +1,289 @@
+{% extends 'realestate_admin_templates/base_admin.html' %}
+{% load static %}
+
+{% block title %}Payments • Admin{% endblock %}
+
+{% block page_heading %}
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <h3 class="mb-0" style="color: #0033A0; font-weight: 700;">💰 Payment Management</h3>
+  <small class="text-muted">Monitor transactions and financial data</small>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Payment Statistics -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="card text-center">
+      <div class="card-body">
+        <div style="font-size: 2em; color: #28a745;">💵</div>
+        <h5 class="card-title">NPR 0</h5>
+        <p class="card-text text-muted">Total Revenue</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center">
+      <div class="card-body">
+        <div style="font-size: 2em; color: #0033A0;">📊</div>
+        <h5 class="card-title">0</h5>
+        <p class="card-text text-muted">This Month</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center">
+      <div class="card-body">
+        <div style="font-size: 2em; color: #ffc107;">⏳</div>
+        <h5 class="card-title">0</h5>
+        <p class="card-text text-muted">Pending</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center">
+      <div class="card-body">
+        <div style="font-size: 2em; color: #DC143C;">❌</div>
+        <h5 class="card-title">0</h5>
+        <p class="card-text text-muted">Failed</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Payments Table -->
+<div class="card">
+  <div class="card-header" style="background: linear-gradient(135deg, #0033A0, #DC143C); color: white;">
+    <h6 class="mb-0"><i class="fas fa-credit-card me-2"></i>Transaction History</h6>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table id="payments-table" class="table table-hover table-striped">
+        <thead style="background: rgba(0, 51, 160, 0.1);">
+          <tr>
+            <th width="60">ID</th>
+            <th>User</th>
+            <th>Type</th>
+            <th>Amount</th>
+            <th>Method</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th width="120">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Sample data - replace with real payment data -->
+          <tr>
+            <td><strong>#TXN001</strong></td>
+            <td>
+              <div>
+                <strong>John Doe</strong>
+                <br><small class="text-muted">john@example.com</small>
+              </div>
+            </td>
+            <td>
+              <span class="badge" style="background: linear-gradient(135deg, #DC143C, #0033A0); color: white;">
+                Premium Upgrade
+              </span>
+            </td>
+            <td>
+              <strong style="color: #DC143C;">NPR 5,000</strong>
+            </td>
+            <td>
+              <span class="badge bg-info">Esewa</span>
+            </td>
+            <td>
+              <span class="badge bg-success">Completed</span>
+            </td>
+            <td>
+              <small>Nov 17, 2025</small>
+              <br><small class="text-muted">2 hours ago</small>
+            </td>
+            <td>
+              <button class="btn btn-outline-primary btn-sm" onclick="viewInvoice('TXN001')">
+                <i class="fas fa-eye"></i>
+              </button>
+              <button class="btn btn-outline-secondary btn-sm" onclick="downloadReceipt('TXN001')">
+                <i class="fas fa-download"></i>
+              </button>
+            </td>
+          </tr>
+          <!-- Empty state -->
+          <tr>
+            <td colspan="8" class="text-center py-4">
+              <i class="fas fa-credit-card fa-2x text-muted mb-2"></i>
+              <p class="text-muted">No payment transactions yet</p>
+              <small class="text-muted">Payment data will appear here once transactions are processed</small>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Payment Methods Overview -->
+<div class="row mt-4">
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-header">
+        <h6 class="mb-0" style="color: #0033A0;"><i class="fas fa-chart-pie me-2"></i>Payment Methods</h6>
+      </div>
+      <div class="card-body">
+        <canvas id="paymentMethodsChart" height="200"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-header">
+        <h6 class="mb-0" style="color: #0033A0;"><i class="fas fa-calendar-alt me-2"></i>Monthly Revenue</h6>
+      </div>
+      <div class="card-body">
+        <canvas id="revenueChart" height="200"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Initialize DataTable
+$(document).ready(function() {
+    $('#payments-table').DataTable({
+        responsive: true,
+        pageLength: 25,
+        language: {
+            search: "Search transactions:",
+            lengthMenu: "Show _MENU_ transactions per page",
+            info: "Showing _START_ to _END_ of _TOTAL_ transactions",
+            paginate: {
+                first: "First",
+                last: "Last",
+                next: "Next",
+                previous: "Previous"
+            }
+        },
+        columnDefs: [
+            { orderable: false, targets: [7] }
+        ],
+        initComplete: function() {
+            $('.table').addClass('fade-in');
+        }
+    });
+
+    // Initialize charts
+    initializePaymentCharts();
+});
+
+function initializePaymentCharts() {
+    // Payment Methods Chart
+    const paymentMethodsCtx = document.getElementById('paymentMethodsChart');
+    if (paymentMethodsCtx) {
+        new Chart(paymentMethodsCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Esewa', 'Khalti', 'Bank Transfer', 'Cash'],
+                datasets: [{
+                    data: [45, 30, 15, 10],
+                    backgroundColor: [
+                        '#0033A0',
+                        '#DC143C',
+                        '#28a745',
+                        '#ffc107'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#FFFFFF'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+
+    // Revenue Chart
+    const revenueCtx = document.getElementById('revenueChart');
+    if (revenueCtx) {
+        new Chart(revenueCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                datasets: [{
+                    label: 'Revenue (NPR)',
+                    data: [12000, 15000, 18000, 22000, 25000, 28000, 32000, 35000, 38000, 42000, 45000, 48000],
+                    borderColor: '#0033A0',
+                    backgroundColor: 'rgba(0, 51, 160, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return 'NPR ' + (value / 1000) + 'K';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+}
+
+// Payment functions
+function viewInvoice(transactionId) {
+    // Open invoice modal or redirect to invoice page
+    showModal('<h4>Invoice #' + transactionId + '</h4><p>Invoice details would be displayed here.</p>', 'Invoice Details');
+}
+
+function downloadReceipt(transactionId) {
+    // Download receipt PDF
+    window.open('/admin/api/payment/receipt/' + transactionId + '/', '_blank');
+    showToast('Receipt download started', 'info');
+}
+
+// Export functions
+function exportPayments() {
+    window.open('/admin/api/export/payments/csv/', '_blank');
+    showToast('Export started. Download will begin shortly.', 'info');
+}
+
+// Filter functions
+function filterPayments(status) {
+    const table = $('#payments-table').DataTable();
+    if (status === 'all') {
+        table.search('').columns().search('').draw();
+    } else {
+        table.column(5).search(status, true, false).draw();
+    }
+}
+
+// Date range filter
+function filterByDateRange() {
+    const startDate = $('#startDate').val();
+    const endDate = $('#endDate').val();
+
+    if (startDate && endDate) {
+        // Apply date filter to table
+        console.log('Filtering by date range:', startDate, 'to', endDate);
+    }
+}
+</script>
+{% endblock %}

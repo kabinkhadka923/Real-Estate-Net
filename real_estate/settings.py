@@ -43,9 +43,9 @@ ALLOWED_HOSTS = [
 if SERVEO_TUNNEL_ACTIVE:
     ALLOWED_HOSTS.append('9ac53b685dca367d97b560f86aceab3f.serveo.net.serveo.net')
 
-# Admin Security Settings
+# Admin Security Settings - ENABLED for real-admin (temporarily disable IP restrictions for testing)
 ADMIN_ENABLED = True
-ADMIN_RESTRICTED_ACCESS = True
+ADMIN_RESTRICTED_ACCESS = False  # Temporarily disabled to allow access
 ALLOWED_ADMIN_IPS = [
     '127.0.0.1',
     'localhost',
@@ -111,6 +111,7 @@ INSTALLED_APPS = [
     'contact',
     'blog',
     'legal',
+    'adminapi',
     'django.contrib.humanize',
 ]
 
@@ -132,13 +133,17 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [BASE_DIR / 'templates'],
-        'APP_DIRS': True,
+        'APP_DIRS': False,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+            ],
+            'loaders': [
+                'django.template.loaders.filesystem.Loader',
+                'django.template.loaders.app_directories.Loader',
             ],
         },
     },

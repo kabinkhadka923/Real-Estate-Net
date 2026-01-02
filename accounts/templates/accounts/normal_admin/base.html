@@ -1,0 +1,638 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="Normal Admin Panel - Real Estate Net">
+    <meta name="author" content="Real Estate Net">
+
+    <title>{% block title %}Normal Admin Panel{% endblock %}</title>
+
+    <!-- Custom fonts for this template-->
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+
+    <!-- Custom styles for this template-->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link href="{% static 'css/admin.css' %}" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #6c757d;
+            --secondary-color: #495057;
+            --accent-color: #007bff;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --light-bg: #f8f9fa;
+            --dark-text: #343a40;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            font-family: 'Nunito', sans-serif;
+        }
+
+        .sidebar {
+            background: linear-gradient(180deg, var(--primary-color) 10%, var(--secondary-color) 100%);
+            min-height: 100vh;
+            position: fixed;
+            left: 0;
+            width: 250px;
+            z-index: 1030;
+        }
+
+        .sidebar-brand {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 1.25rem;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-brand h5 {
+            color: white;
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .sidebar-nav {
+            padding: 1rem 0;
+        }
+
+        .sidebar-nav .nav-item {
+            margin: 0.25rem 0;
+        }
+
+        .sidebar-nav .nav-link {
+            color: rgba(255, 255, 255, 0.8) !important;
+            padding: 0.75rem 1.5rem;
+            transition: all 0.3s ease;
+            border-radius: 0;
+        }
+
+        .sidebar-nav .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white !important;
+        }
+
+        .sidebar-nav .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white !important;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .sidebar-nav .nav-link i {
+            margin-right: 0.5rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .main-content {
+            margin-left: 250px;
+            padding: 1.5rem;
+            min-height: 100vh;
+        }
+
+        .topbar {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1rem 1.5rem;
+            margin-bottom: 2rem;
+            border-radius: 0.375rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .card {
+            border: none;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid #e9ecef;
+            border-radius: 0.5rem 0.5rem 0 0 !important;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+
+        .border-left-primary {
+            border-left: 0.25rem solid var(--primary-color) !important;
+        }
+
+        .border-left-success {
+            border-left: 0.25rem solid var(--success-color) !important;
+        }
+
+        .border-left-warning {
+            border-left: 0.25rem solid var(--warning-color) !important;
+        }
+
+        .border-left-info {
+            border-left: 0.25rem solid #17a2b8 !important;
+        }
+
+        .text-primary {
+            color: var(--primary-color) !important;
+        }
+
+        .alert-info {
+            background-color: #d1ecf1;
+            border-color: #bee5eb;
+            color: #0c5460;
+        }
+
+        /* Permission indicators */
+        .permission-granted {
+            color: var(--success-color);
+        }
+
+        .permission-denied {
+            color: #6c757d;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                position: relative;
+                min-height: auto;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .sidebar-nav {
+                display: flex;
+                flex-wrap: wrap;
+                padding: 0.5rem;
+            }
+
+            .sidebar-nav .nav-item {
+                flex: 1;
+                min-width: 120px;
+            }
+
+            .sidebar-nav .nav-link {
+                padding: 0.5rem;
+                text-align: center;
+                font-size: 0.875rem;
+            }
+        }
+    </style>
+</head>
+
+<body id="page-top">
+    <div id="wrapper">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-brand">
+                <h5><i class="fas fa-user-shield"></i> Normal Admin</h5>
+                <small class="text-white-50">Limited Access</small>
+            </div>
+
+            <ul class="navbar-nav sidebar-nav">
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'normal_admin_dashboard' %}active{% endif %}"
+                       href="{% url 'normal_admin:normal_admin_dashboard' %}">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+
+                {% if permissions.manage_properties %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'normal_admin_properties' %}active{% endif %}"
+                       href="{% url 'normal_admin:normal_admin_properties' %}">
+                        <i class="fas fa-home"></i>
+                        <span>Properties</span>
+                    </a>
+                </li>
+                {% endif %}
+
+                {% if permissions.manage_users %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'normal_admin_users' %}active{% endif %}"
+                       href="{% url 'normal_admin:normal_admin_users' %}">
+                        <i class="fas fa-users"></i>
+                        <span>Users</span>
+                    </a>
+                </li>
+                {% endif %}
+
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'normal_admin_inquiries' %}active{% endif %}"
+                       href="{% url 'normal_admin:normal_admin_inquiries' %}">
+                        <i class="fas fa-envelope"></i>
+                        <span>Inquiries</span>
+                    </a>
+                </li>
+
+                {% if permissions.manage_properties %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'normal_admin_pending' %}active{% endif %}"
+                       href="{% url 'normal_admin:normal_admin_pending' %}">
+                        <i class="fas fa-clock"></i>
+                        <span>Pending Reviews</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'normal_admin_featured' %}active{% endif %}"
+                       href="{% url 'normal_admin:normal_admin_featured' %}">
+                        <i class="fas fa-star"></i>
+                        <span>Featured Properties</span>
+                    </a>
+                </li>
+                {% endif %}
+
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'normal_admin_agents' %}active{% endif %}"
+                       href="{% url 'normal_admin:normal_admin_agents' %}">
+                        <i class="fas fa-user-tie"></i>
+                        <span>Agents</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'normal_admin_companies' %}active{% endif %}"
+                       href="{% url 'normal_admin:normal_admin_companies' %}">
+                        <i class="fas fa-building"></i>
+                        <span>Companies</span>
+                    </a>
+                </li>
+
+                {% if permissions.manage_payments %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'normal_admin_payments' %}active{% endif %}"
+                       href="{% url 'normal_admin:normal_admin_payments' %}">
+                        <i class="fas fa-credit-card"></i>
+                        <span>Payments</span>
+                    </a>
+                </li>
+                {% endif %}
+
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'normal_admin_reports' or request.resolver_match.url_name == 'normal_admin_full_reports' %}active{% endif %}"
+                       href="{% url 'normal_admin:normal_admin_full_reports' %}">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Reports</span>
+                    </a>
+                </li>
+
+                {% if permissions.manage_content %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'normal_admin_blog' %}active{% endif %}"
+                       href="{% url 'normal_admin:normal_admin_blog' %}">
+                        <i class="fas fa-blog"></i>
+                        <span>Blog</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'normal_admin_cms' %}active{% endif %}"
+                       href="{% url 'normal_admin:normal_admin_cms' %}">
+                        <i class="fas fa-edit"></i>
+                        <span>CMS</span>
+                    </a>
+                </li>
+                {% endif %}
+
+                {% if permissions.view_logs %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'normal_admin_django_analytics' %}active{% endif %}"
+                       href="{% url 'normal_admin:normal_admin_django_analytics' %}">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Analytics</span>
+                    </a>
+                </li>
+                {% endif %}
+
+                {% if permissions.export_data %}
+                <li class="nav-item">
+                    <a class="nav-link" href="#" onclick="alert('Export functionality coming soon!')">
+                        <i class="fas fa-download"></i>
+                        <span>Export Data</span>
+                    </a>
+                </li>
+                {% endif %}
+
+                {% if permissions.delete_data %}
+                <li class="nav-item">
+                    <a class="nav-link" href="#" onclick="alert('Bulk delete functionality coming soon!')">
+                        <i class="fas fa-trash-alt"></i>
+                        <span>Delete Data</span>
+                    </a>
+                </li>
+                {% endif %}
+
+                {% if permissions.system_settings %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'normal_admin_settings' %}active{% endif %}"
+                       href="{% url 'normal_admin:normal_admin_settings' %}">
+                        <i class="fas fa-cogs"></i>
+                        <span>System Settings</span>
+                    </a>
+                </li>
+                {% endif %}
+
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'normal_admin_profile' %}active{% endif %}"
+                       href="{% url 'normal_admin:normal_admin_profile' %}">
+                        <i class="fas fa-user"></i>
+                        <span>Profile</span>
+                    </a>
+                </li>
+
+                {% if user.user_type == 'super_admin' %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'normal_admin_permission_requests' %}active{% endif %}"
+                       href="{% url 'normal_admin:normal_admin_permission_requests' %}">
+                        <i class="fas fa-user-check"></i>
+                        <span>Permission Requests</span>
+                    </a>
+                </li>
+
+                <!-- Full Admin System Integration -->
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="collapse" href="#fullAdminMenu" role="button" aria-expanded="false">
+                        <i class="fas fa-crown"></i>
+                        <span>Full Admin</span>
+                        <i class="fas fa-angle-down float-end"></i>
+                    </a>
+                </li>
+                <div class="collapse" id="fullAdminMenu">
+                    <ul class="navbar-nav sidebar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'normal_admin_full_dashboard' %}active{% endif %}"
+                               href="{% url 'normal_admin:normal_admin_full_dashboard' %}">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>Full Dashboard</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'normal_admin_full_users' %}active{% endif %}"
+                               href="{% url 'normal_admin:normal_admin_full_users' %}">
+                                <i class="fas fa-users"></i>
+                                <span>All Users</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'normal_admin_full_properties' %}active{% endif %}"
+                               href="{% url 'normal_admin:normal_admin_full_properties' %}">
+                                <i class="fas fa-building"></i>
+                                <span>All Properties</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'normal_admin_pending' %}active{% endif %}"
+                               href="{% url 'normal_admin:normal_admin_pending' %}">
+                                <i class="fas fa-clock"></i>
+                                <span>Pending Reviews</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'normal_admin_featured' %}active{% endif %}"
+                               href="{% url 'normal_admin:normal_admin_featured' %}">
+                                <i class="fas fa-star"></i>
+                                <span>Featured Properties</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'normal_admin_agents' %}active{% endif %}"
+                               href="{% url 'normal_admin:normal_admin_agents' %}">
+                                <i class="fas fa-user-tie"></i>
+                                <span>Agents</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'normal_admin_payments' %}active{% endif %}"
+                               href="{% url 'normal_admin:normal_admin_payments' %}">
+                                <i class="fas fa-credit-card"></i>
+                                <span>Payments</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'normal_admin_full_reports' %}active{% endif %}"
+                               href="{% url 'normal_admin:normal_admin_full_reports' %}">
+                                <i class="fas fa-chart-bar"></i>
+                                <span>Full Reports</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'normal_admin_blog' %}active{% endif %}"
+                               href="{% url 'normal_admin:normal_admin_blog' %}">
+                                <i class="fas fa-blog"></i>
+                                <span>Blog Management</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'normal_admin_cms' %}active{% endif %}"
+                               href="{% url 'normal_admin:normal_admin_cms' %}">
+                                <i class="fas fa-edit"></i>
+                                <span>CMS</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'normal_admin_settings' %}active{% endif %}"
+                               href="{% url 'normal_admin:normal_admin_settings' %}">
+                                <i class="fas fa-cog"></i>
+                                <span>System Settings</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Django Admin Integration -->
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="collapse" href="#djangoAdminMenu" role="button" aria-expanded="false">
+                        <i class="fas fa-cogs"></i>
+                        <span>Django Admin</span>
+                        <i class="fas fa-angle-down float-end"></i>
+                    </a>
+                </li>
+                <div class="collapse" id="djangoAdminMenu">
+                    <ul class="navbar-nav sidebar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'normal_admin:normal_admin_django_admin' %}">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>Admin Dashboard</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'normal_admin:normal_admin_django_users' %}">
+                                <i class="fas fa-users-cog"></i>
+                                <span>Users</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'normal_admin:normal_admin_django_properties' %}">
+                                <i class="fas fa-building"></i>
+                                <span>Properties</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'normal_admin:normal_admin_django_premium' %}">
+                                <i class="fas fa-star"></i>
+                                <span>Premium Listings</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'normal_admin:normal_admin_django_contact' %}">
+                                <i class="fas fa-envelope"></i>
+                                <span>Contact Inquiries</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'normal_admin:normal_admin_django_blog' %}">
+                                <i class="fas fa-blog"></i>
+                                <span>Blog Posts</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'normal_admin:normal_admin_django_analytics' %}">
+                                <i class="fas fa-chart-line"></i>
+                                <span>Analytics</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                {% else %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'normal_admin_request_permission' %}active{% endif %}"
+                       href="{% url 'normal_admin:normal_admin_request_permission' %}">
+                        <i class="fas fa-key"></i>
+                        <span>Request Permissions</span>
+                    </a>
+                </li>
+                {% endif %}
+
+                <li class="nav-item mt-3">
+                    <a class="nav-link text-warning" href="{% url 'accounts:logout' %}">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Topbar -->
+            <div class="topbar">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="user-info">
+                        <div class="user-avatar">
+                            {{ user.first_name|first|default:user.username|first|upper }}
+                        </div>
+                        <div>
+                            <div class="fw-bold">{{ user.get_full_name|default:user.username }}</div>
+                            <small class="text-muted">Normal Admin</small>
+                        </div>
+                    </div>
+
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-cog"></i> Settings
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'normal_admin:normal_admin_profile' %}">
+                                <i class="fas fa-user"></i> Profile
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Page Content -->
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <!-- jQuery and Bootstrap core JavaScript-->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+    <!-- Custom scripts -->
+    <script>
+        // Auto-hide alerts after 5 seconds
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+
+        // CSRF token setup for AJAX requests
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        const csrftoken = getCookie('csrftoken');
+
+        // Add CSRF token to all AJAX requests
+        document.addEventListener('DOMContentLoaded', function() {
+            const originalFetch = window.fetch;
+            window.fetch = function(...args) {
+                if (args[1] && args[1].method && args[1].method !== 'GET') {
+                    args[1].headers = args[1].headers || {};
+                    args[1].headers['X-CSRFToken'] = csrftoken;
+                }
+                return originalFetch.apply(this, args);
+            };
+        });
+    </script>
+</body>
+</html>

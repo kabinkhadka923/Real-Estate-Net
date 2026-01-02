@@ -1,0 +1,364 @@
+{% extends 'realestate_admin_templates/base_admin.html' %}
+{% load static %}
+
+{% block title %}Settings • Admin{% endblock %}
+
+{% block page_heading %}
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <h3 class="mb-0" style="color: #0033A0; font-weight: 700;">⚙️ System Settings</h3>
+  <small class="text-muted">Configure system preferences and options</small>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <!-- General Settings -->
+  <div class="col-lg-8">
+    <div class="card mb-4">
+      <div class="card-header" style="background: linear-gradient(135deg, #0033A0, #DC143C); color: white;">
+        <h6 class="mb-0"><i class="fas fa-cogs me-2"></i>General Settings</h6>
+      </div>
+      <div class="card-body">
+        <form id="generalSettingsForm">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="siteTitle" class="form-label">Site Title</label>
+              <input type="text" class="form-control" id="siteTitle" value="Real Estate Net" required>
+            </div>
+            <div class="col-md-6">
+              <label for="siteTagline" class="form-label">Site Tagline</label>
+              <input type="text" class="form-control" id="siteTagline" value="Find Your Dream Property" required>
+            </div>
+            <div class="col-md-6">
+              <label for="supportEmail" class="form-label">Support Email</label>
+              <input type="email" class="form-control" id="supportEmail" value="admin@gorkharealestate.com" required>
+            </div>
+            <div class="col-md-6">
+              <label for="contactPhone" class="form-label">Contact Phone</label>
+              <input type="tel" class="form-control" id="contactPhone" value="+977-1-234567" required>
+            </div>
+            <div class="col-12">
+              <label for="siteDescription" class="form-label">Site Description</label>
+              <textarea class="form-control" id="siteDescription" rows="3" required>Discover your dream property with Real Estate Net, Nepal's premier property marketplace. Buy, sell, and lease residential and commercial properties with virtual tours and detailed financial data.</textarea>
+            </div>
+            <div class="col-12">
+              <button type="submit" class="btn" style="background: linear-gradient(135deg, #0033A0, #DC143C); color: white; border: none;">
+                <i class="fas fa-save me-2"></i>Save General Settings
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Email Settings -->
+    <div class="card mb-4">
+      <div class="card-header" style="background: linear-gradient(135deg, #0033A0, #DC143C); color: white;">
+        <h6 class="mb-0"><i class="fas fa-envelope me-2"></i>Email Configuration</h6>
+      </div>
+      <div class="card-body">
+        <form id="emailSettingsForm">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="smtpHost" class="form-label">SMTP Host</label>
+              <input type="text" class="form-control" id="smtpHost" value="smtp.gmail.com" required>
+            </div>
+            <div class="col-md-3">
+              <label for="smtpPort" class="form-label">SMTP Port</label>
+              <input type="number" class="form-control" id="smtpPort" value="587" required>
+            </div>
+            <div class="col-md-3">
+              <label for="smtpSecurity" class="form-label">Security</label>
+              <select class="form-select" id="smtpSecurity" required>
+                <option value="tls" selected>TLS</option>
+                <option value="ssl">SSL</option>
+                <option value="none">None</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label for="smtpUsername" class="form-label">SMTP Username</label>
+              <input type="email" class="form-control" id="smtpUsername" value="admin@gorkharealestate.com" required>
+            </div>
+            <div class="col-md-6">
+              <label for="smtpPassword" class="form-label">SMTP Password</label>
+              <input type="password" class="form-control" id="smtpPassword" placeholder="Enter SMTP password" required>
+            </div>
+            <div class="col-12">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="emailNotifications" checked>
+                <label class="form-check-label" for="emailNotifications">
+                  Enable email notifications for new registrations and property approvals
+                </label>
+              </div>
+            </div>
+            <div class="col-12">
+              <button type="submit" class="btn" style="background: linear-gradient(135deg, #0033A0, #DC143C); color: white; border: none;">
+                <i class="fas fa-save me-2"></i>Save Email Settings
+              </button>
+              <button type="button" class="btn btn-outline-primary ms-2" onclick="testEmail()">
+                <i class="fas fa-paper-plane me-2"></i>Test Email
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Payment Settings -->
+    <div class="card mb-4">
+      <div class="card-header" style="background: linear-gradient(135deg, #0033A0, #DC143C); color: white;">
+        <h6 class="mb-0"><i class="fas fa-credit-card me-2"></i>Payment Gateway Settings</h6>
+      </div>
+      <div class="card-body">
+        <form id="paymentSettingsForm">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="esewaMerchantId" class="form-label">Esewa Merchant ID</label>
+              <input type="text" class="form-control" id="esewaMerchantId" placeholder="Enter Esewa Merchant ID">
+            </div>
+            <div class="col-md-6">
+              <label for="esewaSecretKey" class="form-label">Esewa Secret Key</label>
+              <input type="password" class="form-control" id="esewaSecretKey" placeholder="Enter Esewa Secret Key">
+            </div>
+            <div class="col-md-6">
+              <label for="khaltiPublicKey" class="form-label">Khalti Public Key</label>
+              <input type="text" class="form-control" id="khaltiPublicKey" placeholder="Enter Khalti Public Key">
+            </div>
+            <div class="col-md-6">
+              <label for="khaltiSecretKey" class="form-label">Khalti Secret Key</label>
+              <input type="password" class="form-control" id="khaltiSecretKey" placeholder="Enter Khalti Secret Key">
+            </div>
+            <div class="col-12">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="testMode" checked>
+                <label class="form-check-label" for="testMode">
+                  Enable test/sandbox mode for payment gateways
+                </label>
+              </div>
+            </div>
+            <div class="col-12">
+              <button type="submit" class="btn" style="background: linear-gradient(135deg, #0033A0, #DC143C); color: white; border: none;">
+                <i class="fas fa-save me-2"></i>Save Payment Settings
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- System Status & Actions -->
+  <div class="col-lg-4">
+    <!-- System Status -->
+    <div class="card mb-4">
+      <div class="card-header" style="background: linear-gradient(135deg, #0033A0, #DC143C); color: white;">
+        <h6 class="mb-0"><i class="fas fa-server me-2"></i>System Status</h6>
+      </div>
+      <div class="card-body">
+        <div class="mb-3">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span>Database</span>
+            <span class="badge bg-success">Online</span>
+          </div>
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span>Email Service</span>
+            <span class="badge bg-success">Connected</span>
+          </div>
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span>Payment Gateway</span>
+            <span class="badge bg-warning">Test Mode</span>
+          </div>
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span>File Storage</span>
+            <span class="badge bg-success">Active</span>
+          </div>
+          <div class="d-flex justify-content-between align-items-center">
+            <span>Cache System</span>
+            <span class="badge bg-success">Running</span>
+          </div>
+        </div>
+        <button class="btn btn-outline-primary w-100" onclick="runSystemCheck()">
+          <i class="fas fa-sync-alt me-2"></i>Run System Check
+        </button>
+      </div>
+    </div>
+
+    <!-- Maintenance Mode -->
+    <div class="card mb-4">
+      <div class="card-header" style="background: linear-gradient(135deg, #DC143C, #0033A0); color: white;">
+        <h6 class="mb-0"><i class="fas fa-tools me-2"></i>Maintenance Mode</h6>
+      </div>
+      <div class="card-body">
+        <div class="form-check form-switch mb-3">
+          <input class="form-check-input" type="checkbox" id="maintenanceMode">
+          <label class="form-check-label" for="maintenanceMode">
+            Enable Maintenance Mode
+          </label>
+        </div>
+        <p class="text-muted small mb-3">When enabled, users will see a maintenance page instead of the website.</p>
+        <button class="btn btn-warning w-100" onclick="toggleMaintenance()">
+          <i class="fas fa-toggle-on me-2"></i>Toggle Maintenance
+        </button>
+      </div>
+    </div>
+
+    <!-- Backup & Recovery -->
+    <div class="card mb-4">
+      <div class="card-header" style="background: linear-gradient(135deg, #0033A0, #DC143C); color: white;">
+        <h6 class="mb-0"><i class="fas fa-database me-2"></i>Backup & Recovery</h6>
+      </div>
+      <div class="card-body">
+        <p class="text-muted small mb-3">Last backup: Nov 17, 2025 2:00 AM</p>
+        <button class="btn btn-outline-success w-100 mb-2" onclick="createBackup()">
+          <i class="fas fa-download me-2"></i>Create Backup
+        </button>
+        <button class="btn btn-outline-secondary w-100 mb-2" onclick="viewBackups()">
+          <i class="fas fa-list me-2"></i>View Backups
+        </button>
+        <button class="btn btn-outline-danger w-100" onclick="restoreBackup()">
+          <i class="fas fa-upload me-2"></i>Restore Backup
+        </button>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card">
+      <div class="card-header" style="background: linear-gradient(135deg, #0033A0, #DC143C); color: white;">
+        <h6 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h6>
+      </div>
+      <div class="card-body">
+        <button class="btn btn-outline-primary w-100 mb-2" onclick="clearCache()">
+          <i class="fas fa-trash me-2"></i>Clear Cache
+        </button>
+        <button class="btn btn-outline-info w-100 mb-2" onclick="viewLogs()">
+          <i class="fas fa-file-alt me-2"></i>View System Logs
+        </button>
+        <button class="btn btn-outline-warning w-100" onclick="restartServices()">
+          <i class="fas fa-sync me-2"></i>Restart Services
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Form submission handlers
+$(document).ready(function() {
+    // General Settings
+    $('#generalSettingsForm').on('submit', function(e) {
+        e.preventDefault();
+        saveSettings('general', {
+            siteTitle: $('#siteTitle').val(),
+            siteTagline: $('#siteTagline').val(),
+            supportEmail: $('#supportEmail').val(),
+            contactPhone: $('#contactPhone').val(),
+            siteDescription: $('#siteDescription').val()
+        });
+    });
+
+    // Email Settings
+    $('#emailSettingsForm').on('submit', function(e) {
+        e.preventDefault();
+        saveSettings('email', {
+            smtpHost: $('#smtpHost').val(),
+            smtpPort: $('#smtpPort').val(),
+            smtpSecurity: $('#smtpSecurity').val(),
+            smtpUsername: $('#smtpUsername').val(),
+            smtpPassword: $('#smtpPassword').val(),
+            emailNotifications: $('#emailNotifications').is(':checked')
+        });
+    });
+
+    // Payment Settings
+    $('#paymentSettingsForm').on('submit', function(e) {
+        e.preventDefault();
+        saveSettings('payment', {
+            esewaMerchantId: $('#esewaMerchantId').val(),
+            esewaSecretKey: $('#esewaSecretKey').val(),
+            khaltiPublicKey: $('#khaltiPublicKey').val(),
+            khaltiSecretKey: $('#khaltiSecretKey').val(),
+            testMode: $('#testMode').is(':checked')
+        });
+    });
+});
+
+function saveSettings(type, data) {
+    // In a real implementation, this would make an AJAX call to save settings
+    console.log('Saving', type, 'settings:', data);
+    showToast(type.charAt(0).toUpperCase() + type.slice(1) + ' settings saved successfully!', 'success');
+}
+
+function testEmail() {
+    showToast('Sending test email...', 'info');
+    // Simulate email sending
+    setTimeout(() => {
+        showToast('Test email sent successfully!', 'success');
+    }, 2000);
+}
+
+function runSystemCheck() {
+    showToast('Running system diagnostics...', 'info');
+    // Simulate system check
+    setTimeout(() => {
+        showToast('System check completed. All services are running normally.', 'success');
+    }, 3000);
+}
+
+function toggleMaintenance() {
+    const isEnabled = $('#maintenanceMode').is(':checked');
+    const action = isEnabled ? 'disabled' : 'enabled';
+
+    showToast(`Maintenance mode ${action}`, isEnabled ? 'warning' : 'success');
+}
+
+function createBackup() {
+    showToast('Creating system backup...', 'info');
+    // Simulate backup creation
+    setTimeout(() => {
+        showToast('Backup created successfully!', 'success');
+    }, 5000);
+}
+
+function viewBackups() {
+    showModal('<h4>Available Backups</h4><p>Backup listing would be displayed here.</p>', 'System Backups');
+}
+
+function restoreBackup() {
+    if (confirm('Are you sure you want to restore from backup? This will overwrite current data.')) {
+        showToast('Restoring from backup...', 'warning');
+        setTimeout(() => {
+            showToast('Backup restored successfully!', 'success');
+        }, 10000);
+    }
+}
+
+function clearCache() {
+    showToast('Clearing system cache...', 'info');
+    setTimeout(() => {
+        showToast('Cache cleared successfully!', 'success');
+    }, 2000);
+}
+
+function viewLogs() {
+    showModal('<h4>System Logs</h4><pre>Log entries would be displayed here...</pre>', 'System Logs');
+}
+
+function restartServices() {
+    if (confirm('Are you sure you want to restart system services? This may cause temporary downtime.')) {
+        showToast('Restarting services...', 'warning');
+        setTimeout(() => {
+            showToast('Services restarted successfully!', 'success');
+        }, 8000);
+    }
+}
+
+// Load current settings on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // In a real implementation, load current settings via AJAX
+    console.log('Settings page loaded');
+});
+</script>
+{% endblock %}

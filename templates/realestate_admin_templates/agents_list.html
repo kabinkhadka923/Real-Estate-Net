@@ -1,0 +1,353 @@
+{% extends 'realestate_admin_templates/base_admin.html' %}
+{% load static %}
+
+{% block title %}Agents • Admin{% endblock %}
+
+{% block page_heading %}
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <h3 class="mb-0" style="color: #0033A0; font-weight: 700;">👥 Agent Management</h3>
+  <small class="text-muted">Manage real estate agents and brokers</small>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Action Bar -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h5 class="mb-0">All Agents ({{ total_agents }})</h5>
+    <small class="text-muted">Verify, manage, and monitor agent performance</small>
+  </div>
+  <div class="d-flex gap-2">
+    <button class="btn" style="background: linear-gradient(135deg, #DC143C, #0033A0); color: white; border: none;" onclick="exportAgents()">
+      <i class="fas fa-download me-1"></i>Export CSV
+    </button>
+    <button class="btn btn-success" onclick="showBulkActions()">
+      <i class="fas fa-tasks me-1"></i>Bulk Actions
+    </button>
+  </div>
+</div>
+
+<!-- Bulk Actions Bar -->
+<div id="bulk-actions-bar" class="card mb-3" style="display: none; background: linear-gradient(135deg, #0033A0, #DC143C); color: white;">
+  <div class="card-body py-2">
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        <span id="selected-count">0 agents selected</span>
+      </div>
+      <div class="col-md-4 text-end">
+        <button class="btn btn-light btn-sm me-2" onclick="bulkVerify()">
+          <i class="fas fa-check me-1"></i>Verify
+        </button>
+        <button class="btn btn-warning btn-sm me-2" onclick="bulkSuspend()">
+          <i class="fas fa-ban me-1"></i>Suspend
+        </button>
+        <button class="btn btn-secondary btn-sm" onclick="clearSelection()">
+          <i class="fas fa-times me-1"></i>Clear
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Agents Table -->
+<div class="card">
+  <div class="card-header" style="background: linear-gradient(135deg, #0033A0, #DC143C); color: white;">
+    <h6 class="mb-0"><i class="fas fa-user-tie me-2"></i>Registered Agents & Brokers</h6>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table id="agents-table" class="table table-hover table-striped">
+        <thead style="background: rgba(0, 51, 160, 0.1);">
+          <tr>
+            <th width="40">
+              <input type="checkbox" id="select-all" class="form-check-input">
+            </th>
+            <th width="60">ID</th>
+            <th>Agent</th>
+            <th>Company</th>
+            <th>License</th>
+            <th>Properties</th>
+            <th>Status</th>
+            <th>Joined</th>
+            <th width="150">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for agent in agents %}
+          <tr data-agent-id="{{ agent.id }}">
+            <td>
+              <input type="checkbox" class="agent-checkbox form-check-input" value="{{ agent.id }}">
+            </td>
+            <td>
+              <strong>#{{ agent.id }}</strong>
+            </td>
+            <td>
+              <div class="d-flex align-items-center">
+                {% if agent.avatar %}
+                  <img src="{{ agent.avatar.url }}" alt="Avatar" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                {% else %}
+                  <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px; font-size: 16px; font-weight: bold;">
+                    {{ agent.get_full_name|slice:":1"|upper|default:agent.username|slice:":1"|upper }}
+                  </div>
+                {% endif %}
+                <div>
+                  <strong>{{ agent.get_full_name|default:agent.username }}</strong>
+                  <br><small class="text-muted">{{ agent.email }}</small>
+                </div>
+              </div>
+            </td>
+            <td>
+              {% if agent.company_name %}
+                <strong>{{ agent.company_name }}</strong>
+              {% else %}
+                <span class="text-muted">Independent</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if agent.license_number %}
+                <span class="badge bg-info">{{ agent.license_number }}</span>
+              {% else %}
+                <span class="text-muted">No License</span>
+              {% endif %}
+            </td>
+            <td>
+              <span class="badge bg-success">{{ agent.properties.count }}</span>
+            </td>
+            <td>
+              {% if agent.is_active %}
+                {% if agent.is_verified %}
+                  <span class="badge bg-success">Verified</span>
+                {% else %}
+                  <span class="badge bg-warning">Unverified</span>
+                {% endif %}
+              {% else %}
+                <span class="badge bg-danger">Suspended</span>
+              {% endif %}
+              {% if agent.is_premium_user %}
+                <br><small class="text-warning"><i class="fas fa-star me-1"></i>Premium</small>
+              {% endif %}
+            </td>
+            <td>
+              <small>{{ agent.date_joined|date:"M d, Y" }}</small>
+              <br><small class="text-muted">{{ agent.date_joined|timesince }}</small>
+            </td>
+            <td>
+              <div class="btn-group btn-group-sm" role="group">
+                <a href="{% url 'admin_agent_detail' agent.id %}" class="btn btn-outline-primary btn-sm" title="View Details">
+                  <i class="fas fa-eye"></i>
+                </a>
+                {% if not agent.is_verified %}
+                  <button class="btn btn-success btn-sm" onclick="verifyAgent({{ agent.id }})" title="Verify Agent">
+                    <i class="fas fa-check"></i>
+                  </button>
+                {% endif %}
+                {% if agent.is_active %}
+                  <button class="btn btn-outline-danger btn-sm" onclick="suspendAgent({{ agent.id }})" title="Suspend Agent">
+                    <i class="fas fa-ban"></i>
+                  </button>
+                {% else %}
+                  <button class="btn btn-outline-success btn-sm" onclick="activateAgent({{ agent.id }})" title="Activate Agent">
+                    <i class="fas fa-play"></i>
+                  </button>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="9" class="text-center py-4">
+              <i class="fas fa-user-tie fa-2x text-muted mb-2"></i>
+              <p class="text-muted">No agents found</p>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Agent Statistics Cards -->
+<div class="row mt-4">
+  <div class="col-md-3">
+    <div class="card text-center">
+      <div class="card-body">
+        <div style="font-size: 2em; color: #0033A0;">👥</div>
+        <h5 class="card-title">{{ total_agents }}</h5>
+        <p class="card-text text-muted">Total Agents</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center">
+      <div class="card-body">
+        <div style="font-size: 2em; color: #28a745;">✅</div>
+        <h5 class="card-title">{{ agents|length }}</h5>
+        <p class="card-text text-muted">Verified</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center">
+      <div class="card-body">
+        <div style="font-size: 2em; color: #ffc107;">🏢</div>
+        <h5 class="card-title">{{ agents|length }}</h5>
+        <p class="card-text text-muted">With Company</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center">
+      <div class="card-body">
+        <div style="font-size: 2em; color: #DC143C;">💎</div>
+        <h5 class="card-title">{{ agents|length }}</h5>
+        <p class="card-text text-muted">Premium Agents</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Initialize DataTable
+$(document).ready(function() {
+    $('#agents-table').DataTable({
+        responsive: true,
+        pageLength: 25,
+        language: {
+            search: "Search agents:",
+            lengthMenu: "Show _MENU_ agents per page",
+            info: "Showing _START_ to _END_ of _TOTAL_ agents",
+            paginate: {
+                first: "First",
+                last: "Last",
+                next: "Next",
+                previous: "Previous"
+            }
+        },
+        columnDefs: [
+            { orderable: false, targets: [0, 8] }
+        ],
+        initComplete: function() {
+            $('.table').addClass('fade-in');
+        }
+    });
+});
+
+// Bulk selection handling
+$('#select-all').on('change', function() {
+    $('.agent-checkbox').prop('checked', this.checked);
+    updateBulkActionsVisibility();
+});
+
+$(document).on('change', '.agent-checkbox', function() {
+    updateBulkActionsVisibility();
+});
+
+function updateBulkActionsVisibility() {
+    const checkedBoxes = $('.agent-checkbox:checked');
+    const bulkActionsBar = $('#bulk-actions-bar');
+    const selectedCount = $('#selected-count');
+
+    if (checkedBoxes.length > 0) {
+        bulkActionsBar.show();
+        selectedCount.text(`${checkedBoxes.length} agent${checkedBoxes.length > 1 ? 's' : ''} selected`);
+    } else {
+        bulkActionsBar.hide();
+    }
+}
+
+function showBulkActions() {
+    $('#select-all').prop('checked', true).trigger('change');
+}
+
+// Agent action functions
+function verifyAgent(agentId) {
+    if (confirm('Verify this agent? They will be marked as verified and can start listing properties.')) {
+        ajaxPost(`/admin/api/user/verify/`, { id: agentId }, function() {
+            location.reload();
+        });
+    }
+}
+
+function suspendAgent(agentId) {
+    if (confirm('Suspend this agent? They will lose access to their account until reactivated.')) {
+        ajaxPost(`/admin/api/user/ban/`, { id: agentId }, function() {
+            location.reload();
+        });
+    }
+}
+
+function activateAgent(agentId) {
+    if (confirm('Reactivate this agent? They will regain access to their account.')) {
+        ajaxPost(`/admin/api/user/unban/`, { id: agentId }, function() {
+            location.reload();
+        });
+    }
+}
+
+// Bulk operations
+function bulkVerify() {
+    const selectedAgents = $('.agent-checkbox:checked').map(function() {
+        return this.value;
+    }).get();
+
+    if (selectedAgents.length === 0) {
+        showToast('No agents selected', 'warning');
+        return;
+    }
+
+    if (confirm(`Verify ${selectedAgents.length} selected agent(s)?`)) {
+        ajaxPost(`/admin/api/users/bulk-verify/`, {
+            ids: JSON.stringify(selectedAgents)
+        }, function() {
+            location.reload();
+        });
+    }
+}
+
+function bulkSuspend() {
+    const selectedAgents = $('.agent-checkbox:checked').map(function() {
+        return this.value;
+    }).get();
+
+    if (selectedAgents.length === 0) {
+        showToast('No agents selected', 'warning');
+        return;
+    }
+
+    if (confirm(`Suspend ${selectedAgents.length} selected agent(s)? They will lose account access.`)) {
+        ajaxPost(`/admin/api/users/bulk-ban/`, {
+            ids: JSON.stringify(selectedAgents)
+        }, function() {
+            location.reload();
+        });
+    }
+}
+
+function clearSelection() {
+    $('.agent-checkbox, #select-all').prop('checked', false);
+    updateBulkActionsVisibility();
+}
+
+// Export function
+function exportAgents() {
+    window.open('/admin/api/export/agents/csv/', '_blank');
+    showToast('Export started. Download will begin shortly.', 'info');
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        $('.dataTables_filter input').focus();
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+        e.preventDefault();
+        $('#select-all').prop('checked', true).trigger('change');
+    }
+});
+</script>
+{% endblock %}

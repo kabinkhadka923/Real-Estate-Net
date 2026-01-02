@@ -1,0 +1,353 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Real Estate Agents - Find Trusted Property Professionals{% endblock %}
+
+{% block meta_description %}Browse verified real estate agents and brokers. Find trusted property professionals with experience in buying, selling, and leasing properties.{% endblock %}
+
+{% block meta_keywords %}real estate agents, property brokers, real estate professionals, property consultants, verified agents{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <div class="agents-header">
+            <h1>Real Estate Agents & Brokers</h1>
+            <p>Connect with verified property professionals who can help you with your real estate needs.</p>
+            <div class="stats">
+                <span class="stat-item"><strong>{{ total_agents }}</strong> Verified Agents</span>
+            </div>
+        </div>
+
+        {% if agents %}
+            <div class="agents-grid">
+                {% for agent in agents %}
+                <div class="agent-card">
+                    <div class="agent-header">
+                        {% if agent.avatar %}
+                            <img src="{{ agent.avatar.url }}" alt="{{ agent.get_full_name|default:agent.username }}" class="agent-avatar">
+                        {% else %}
+                            <div class="agent-avatar-placeholder">
+                                <i class="fas fa-user-circle"></i>
+                            </div>
+                        {% endif %}
+
+                        {% if agent.is_premium_user %}
+                            <span class="premium-badge">⭐ PREMIUM</span>
+                        {% endif %}
+
+                        {% if agent.is_verified %}
+                            <span class="verified-badge"><i class="fas fa-check"></i> Verified</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="agent-info">
+                        <h3>{{ agent.get_full_name|default:agent.username }}</h3>
+                        <p class="agent-type">{{ agent.user_type|title }}</p>
+
+                        {% if agent.company_name %}
+                            <p class="company"><i class="fas fa-building"></i> {{ agent.company_name }}</p>
+                        {% endif %}
+
+                        {% if agent.bio %}
+                            <p class="bio">{{ agent.bio|truncatechars:120 }}</p>
+                        {% endif %}
+
+                        <div class="agent-stats">
+                            <span class="stat"><i class="fas fa-home"></i> {{ agent.properties_count }} Properties</span>
+                            {% if agent.years_experience %}
+                                <span class="stat"><i class="fas fa-briefcase"></i> {{ agent.years_experience }} years exp.</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="agent-contact">
+                        {% if agent.phone_number %}
+                            <a href="tel:{{ agent.phone_number }}" class="contact-link">
+                                <i class="fas fa-phone"></i> {{ agent.phone_number }}
+                            </a>
+                        {% endif %}
+                        {% if agent.email %}
+                            <a href="mailto:{{ agent.email }}" class="contact-link">
+                                <i class="fas fa-envelope"></i> Email
+                            </a>
+                        {% endif %}
+
+                        <div class="social-links">
+                            {% if agent.social_facebook %}
+                                <a href="{{ agent.social_facebook }}" target="_blank" title="Facebook">
+                                    <i class="fab fa-facebook"></i>
+                                </a>
+                            {% endif %}
+                            {% if agent.social_linkedin %}
+                                <a href="{{ agent.social_linkedin }}" target="_blank" title="LinkedIn">
+                                    <i class="fab fa-linkedin"></i>
+                                </a>
+                            {% endif %}
+                            {% if agent.social_twitter %}
+                                <a href="{{ agent.social_twitter }}" target="_blank" title="Twitter">
+                                    <i class="fab fa-twitter"></i>
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="no-agents">
+                <i class="fas fa-users"></i>
+                <h3>No Agents Available</h3>
+                <p>There are no verified agents in our network yet. Check back soon!</p>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'properties:property_create' %}" class="cta-link">Become the first agent to list properties</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.agents-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.agents-header h1 {
+    color: var(--nepal-blue);
+    font-size: 2.5em;
+    margin-bottom: 10px;
+}
+
+.agents-header p {
+    font-size: 1.1em;
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.stats {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.stat-item {
+    background: var(--nepal-blue);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 25px;
+    font-weight: 600;
+}
+
+.agents-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 30px;
+    margin-top: 30px;
+}
+
+.agent-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid #eee;
+}
+
+.agent-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+}
+
+.agent-header {
+    position: relative;
+    padding: 20px;
+    background: linear-gradient(135deg, var(--nepal-blue), var(--nepal-crimson));
+    color: white;
+    text-align: center;
+}
+
+.agent-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid white;
+    margin: 0 auto 10px;
+    display: block;
+}
+
+.agent-avatar-placeholder {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5em;
+    margin: 0 auto 10px;
+}
+
+.premium-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: white;
+    color: var(--nepal-crimson);
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 0.8em;
+    font-weight: bold;
+}
+
+.verified-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: #28a745;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 0.8em;
+    font-weight: bold;
+}
+
+.agent-info {
+    padding: 20px;
+}
+
+.agent-info h3 {
+    margin: 0 0 5px 0;
+    color: var(--nepal-blue);
+    font-size: 1.3em;
+}
+
+.agent-type {
+    color: var(--nepal-crimson);
+    font-weight: 600;
+    margin: 0 0 10px 0;
+    text-transform: uppercase;
+    font-size: 0.9em;
+}
+
+.company {
+    color: #666;
+    margin: 5px 0;
+    font-size: 0.95em;
+}
+
+.bio {
+    color: #555;
+    margin: 10px 0;
+    font-size: 0.95em;
+    line-height: 1.4;
+}
+
+.agent-stats {
+    display: flex;
+    gap: 15px;
+    margin: 15px 0;
+}
+
+.stat {
+    color: var(--nepal-blue);
+    font-weight: 600;
+    font-size: 0.9em;
+}
+
+.stat i {
+    margin-right: 5px;
+}
+
+.agent-contact {
+    padding: 20px;
+    border-top: 1px solid #eee;
+    background: #f9f9f9;
+}
+
+.contact-link {
+    display: inline-block;
+    color: var(--nepal-blue);
+    text-decoration: none;
+    margin: 5px 10px 5px 0;
+    font-weight: 500;
+    transition: color 0.3s;
+}
+
+.contact-link:hover {
+    color: var(--nepal-crimson);
+}
+
+.social-links {
+    margin-top: 10px;
+}
+
+.social-links a {
+    color: var(--nepal-blue);
+    margin-right: 10px;
+    font-size: 1.2em;
+    transition: color 0.3s;
+}
+
+.social-links a:hover {
+    color: var(--nepal-crimson);
+}
+
+.no-agents {
+    text-align: center;
+    padding: 60px 20px;
+    color: #666;
+}
+
+.no-agents i {
+    font-size: 4em;
+    margin-bottom: 20px;
+    color: var(--nepal-blue);
+}
+
+.no-agents h3 {
+    color: var(--nepal-blue);
+    margin-bottom: 10px;
+}
+
+.cta-link {
+    display: inline-block;
+    background: var(--nepal-blue);
+    color: white;
+    padding: 12px 24px;
+    text-decoration: none;
+    border-radius: 6px;
+    margin-top: 15px;
+    transition: background 0.3s;
+}
+
+.cta-link:hover {
+    background: var(--nepal-crimson);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .agents-grid {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+    }
+
+    .agent-stats {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .agents-header h1 {
+        font-size: 2em;
+    }
+
+    .stats {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+</style>
+{% endblock %}

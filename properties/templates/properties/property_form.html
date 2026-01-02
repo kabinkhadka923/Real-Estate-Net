@@ -1,14 +1,1154 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}{{ action }} Property{% endblock %}
+{% block title %}{{ action }} Property Listing{% endblock %}
+
+{% block extra_css %}
+<style>
+.property-create-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 30px 20px;
+    background: #f8f9fa;
+    min-height: 100vh;
+}
+
+.property-form-header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding: 40px 20px;
+    background: linear-gradient(135deg, #0033A0, #002244);
+    color: white;
+    border-radius: 15px;
+    box-shadow: 0 8px 32px rgba(0,51,160,0.3);
+}
+
+.property-form-header h2 {
+    font-size: 2.5em;
+    font-weight: 600;
+    margin: 0 0 15px 0;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.property-form-header p {
+    font-size: 1.2em;
+    opacity: 0.9;
+    margin: 0;
+}
+
+/* Form Styles */
+.property-form-modern {
+    background: white;
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+}
+
+.form-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.form-section {
+    padding: 30px;
+    border: 2px solid #f0f0f0;
+    border-radius: 12px;
+    background: #fafafa;
+    transition: all 0.3s ease;
+}
+
+.form-section:hover {
+    border-color: #0033A0;
+    box-shadow: 0 4px 20px rgba(0,51,160,0.1);
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 25px;
+    gap: 15px;
+}
+
+.section-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #0033A0, #DC143C);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5em;
+    box-shadow: 0 4px 15px rgba(0,51,160,0.3);
+}
+
+.section-title {
+    font-size: 1.5em;
+    font-weight: 600;
+    color: #0033A0;
+    margin: 0;
+}
+
+/* Form Field Groups */
+.field-group {
+    margin-bottom: 20px;
+}
+
+.field-group label {
+    display: block;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+    font-size: 0.95em;
+}
+
+.field-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.field-group input,
+.field-group select,
+.field-group textarea {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+    background: white;
+}
+
+.field-group input:focus,
+.field-group select:focus,
+.field-group textarea:focus {
+    outline: none;
+    border-color: #0033A0;
+    box-shadow: 0 0 0 3px rgba(0,51,160,0.1);
+}
+
+.field-group textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+/* Map Section */
+.location-map-container {
+    margin-top: 20px;
+}
+
+#property-location-map {
+    width: 100%;
+    height: 400px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.location-coords {
+    margin-top: 15px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #0033A0;
+}
+
+.coords-display {
+    font-family: monospace;
+    font-weight: 500;
+    color: #333;
+}
+
+.coords-display span {
+    color: #DC143C;
+    font-weight: bold;
+}
+
+/* Image Upload */
+.image-upload-section {
+    border: 2px dashed #e0e0e0;
+    border-radius: 12px;
+    padding: 40px;
+    text-align: center;
+    transition: all 0.3s ease;
+    background: #fafafa;
+    margin-bottom: 20px;
+}
+
+.image-upload-section.drag-over {
+    border-color: #0033A0;
+    background: rgba(0,51,160,0.05);
+    transform: scale(1.02);
+}
+
+.upload-icon {
+    font-size: 3em;
+    color: #ccc;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+}
+
+.image-upload-section.selected .upload-icon {
+    color: #0033A0;
+}
+
+.image-upload-section h4 {
+    color: #666;
+    margin: 0 0 10px 0;
+    font-weight: 600;
+}
+
+.image-upload-section p {
+    color: #999;
+    margin: 0 0 20px 0;
+    transition: all 0.3s ease;
+}
+
+.image-upload-section.selected p {
+    color: #0033A0;
+    font-weight: 500;
+}
+
+.upload-btn {
+    background: linear-gradient(135deg, #0033A0, #DC143C);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.upload-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,51,160,0.3);
+}
+
+/* Image Preview Grid */
+.image-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.image-preview-item {
+    position: relative;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+}
+
+.image-preview-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+.image-preview-img {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+    display: block;
+}
+
+.image-preview-info {
+    padding: 8px;
+    background: #f8f9fa;
+}
+
+.image-preview-name {
+    font-size: 0.8em;
+    color: #666;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 2px;
+}
+
+.image-preview-size {
+    font-size: 0.7em;
+    color: #999;
+}
+
+.remove-image-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(220, 20, 60, 0.8);
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7em;
+    transition: all 0.3s ease;
+    z-index: 10;
+}
+
+.remove-image-btn:hover {
+    background: #dc3545;
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.image-preview-item.invalid {
+    border: 2px solid #dc3545;
+    box-shadow: 0 2px 8px rgba(220, 20, 60, 0.2);
+}
+
+.image-error {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(220, 20, 60, 0.9);
+    color: white;
+    padding: 8px;
+    font-size: 0.7em;
+    border-radius: 0 0 8px 8px;
+}
+
+/* Hidden file input for images */
+.image-file-input {
+    display: none;
+}
+
+/* Drag and drop cursor */
+.image-upload-section.dragging .upload-icon {
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-10px);
+    }
+    60% {
+        transform: translateY(-5px);
+    }
+}
+
+/* Price Section */
+.price-highlight {
+    background: linear-gradient(135deg, #DC143C, #B01030);
+    color: white;
+    padding: 25px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.price-input-highlight {
+    font-size: 1.5em;
+    font-weight: bold;
+    border: 3px solid rgba(255,255,255,0.4);
+    background: rgba(255,255,255,0.15);
+    color: white;
+    width: 300px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+.price-input-highlight::placeholder {
+    color: rgba(255,255,255,0.8);
+    font-weight: normal;
+}
+
+.price-input-highlight:focus {
+    border-color: white;
+    background: rgba(255,255,255,0.25);
+    box-shadow: 0 2px 15px rgba(0,0,0,0.3);
+    color: white;
+}
+
+/* Form Actions */
+.form-actions {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 40px;
+    padding-top: 30px;
+    border-top: 2px solid #f0f0f0;
+}
+
+.submit-btn {
+    background: linear-gradient(135deg, #0033A0, #002244);
+    color: white;
+    border: none;
+    padding: 18px 50px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 6px 25px rgba(0,51,160,0.3);
+}
+
+.submit-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px rgba(0,51,160,0.4);
+}
+
+.cancel-btn {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 18px 40px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.cancel-btn:hover {
+    background: #5a6268;
+    transform: translateY(-2px);
+}
+
+/* Progress Indicator */
+.form-progress {
+    position: sticky;
+    top: 20px;
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+}
+
+.progress-steps {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+}
+
+.progress-step {
+    flex: 1;
+    text-align: center;
+    position: relative;
+}
+
+.progress-step::after {
+    content: '';
+    position: absolute;
+    top: 15px;
+    left: 50%;
+    right: -50%;
+    height: 2px;
+    background: #e0e0e0;
+}
+
+.progress-step:last-child::after {
+    display: none;
+}
+
+.progress-step.active .step-number {
+    background: #0033A0;
+    color: white;
+}
+
+.progress-step.completed .step-number {
+    background: #28a745;
+    color: white;
+}
+
+.step-number {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #e0e0e0;
+    color: #666;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.step-label {
+    font-size: 0.85em;
+    color: #666;
+    font-weight: 500;
+}
+
+/* Error Messages */
+.errorlist {
+    color: #dc3545;
+    font-size: 0.85em;
+    margin-top: 5px;
+    padding-left: 15px;
+}
+
+.field-group .error {
+    border-color: #dc3545;
+}
+
+/* Responsive */
+/* Responsive Price Input */
+@media (max-width: 480px) {
+    .price-input-highlight {
+        width: 100%;
+        font-size: 1.2em;
+    }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .property-create-container {
+        padding: 20px 15px;
+    }
+
+    .property-form-modern {
+        padding: 20px;
+    }
+
+    .form-sections {
+        gap: 20px;
+    }
+
+    .form-section {
+        padding: 20px;
+    }
+
+    .field-row {
+        grid-template-columns: 1fr;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .progress-steps {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .progress-step::after {
+        display: none;
+    }
+
+    .price-input-highlight {
+        width: 250px;
+        font-size: 1.3em;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Google Maps for location selection
+    initLocationMap();
+
+    // Form validation and progress tracking
+    initFormValidation();
+
+    function initLocationMap() {
+        const mapDiv = document.getElementById('property-location-map');
+        const latInput = document.getElementById('id_latitude');
+        const lngInput = document.getElementById('id_longitude');
+        const coordsDisplay = document.getElementById('location-coords');
+
+        if (mapDiv && typeof google !== 'undefined') {
+            try {
+                // Default to Kathmandu
+                let lat = parseFloat(latInput.value) || 27.7172;
+                let lng = parseFloat(lngInput.value) || 85.3240;
+
+                const mapOptions = {
+                    center: { lat: lat, lng: lng },
+                    zoom: 12,
+                    mapTypeId: google.maps.MapTypeId.HYBRID,
+                    streetViewControl: false,
+                    fullscreenControl: true,
+                    styles: [
+                        {
+                            featureType: "poi",
+                            elementType: "labels",
+                            stylers: [{ visibility: "off" }]
+                        }
+                    ]
+                };
+
+                const map = new google.maps.Map(mapDiv, mapOptions);
+
+                // Create marker
+                const marker = new google.maps.Marker({
+                    position: { lat: lat, lng: lng },
+                    map: map,
+                    draggable: true,
+                    icon: {
+                        path: google.maps.SymbolPath.CIRCLE,
+                        scale: 25,
+                        fillColor: '#0033A0',
+                        fillOpacity: 1,
+                        strokeColor: '#ffffff',
+                        strokeWeight: 3
+                    }
+                });
+
+                // Update coordinates function
+                function updateCoordinates(position) {
+                    const latitude = position.lat();
+                    const longitude = position.lng();
+
+                    latInput.value = latitude.toFixed(8);
+                    lngInput.value = longitude.toFixed(8);
+
+                    if (coordsDisplay) {
+                        coordsDisplay.innerHTML = `
+                            <div class="coords-display">
+                                📍 Latitude: <span>${latitude.toFixed(6)}</span> |
+                                Longitude: <span>${longitude.toFixed(6)}</span>
+                            </div>
+                        `;
+                    }
+                }
+
+                // Marker drag event
+                google.maps.event.addListener(marker, 'dragend', function() {
+                    updateCoordinates(marker.getPosition());
+                });
+
+                // Map click event
+                google.maps.event.addListener(map, 'click', function(event) {
+                    const clickedPos = event.latLng;
+                    marker.setPosition(clickedPos);
+                    updateCoordinates(clickedPos);
+
+                    // Animate marker
+                    marker.setAnimation(google.maps.Animation.BOUNCE);
+                    setTimeout(() => marker.setAnimation(null), 700);
+                });
+
+                // Update map center when coordinates change
+                setInterval(function() {
+                    if (latInput.value && lngInput.value) {
+                        const newLat = parseFloat(latInput.value);
+                        const newLng = parseFloat(lngInput.value);
+
+                        if (Math.abs(newLat - lat) > 0.001 || Math.abs(newLng - lng) > 0.001) {
+                            lat = newLat;
+                            lng = newLng;
+                            const newPos = new google.maps.LatLng(lat, lng);
+                            marker.setPosition(newPos);
+                            map.panTo(newPos);
+                        }
+                    }
+                }, 1000);
+
+                // Initialize coordinates display
+                updateCoordinates(marker.getPosition());
+
+            } catch (error) {
+                console.error('Error initializing location map:', error);
+                mapDiv.innerHTML = `
+                    <div style="padding: 50px; text-align: center; color: #666; background: #f8f9fa; border-radius: 8px;">
+                        <i class="fas fa-map-marked-alt" style="font-size: 3em; margin-bottom: 20px; color: #ccc;"></i>
+                        <h3 style="color: #0033A0; margin-bottom: 10px;">Unable to load location map</h3>
+                        <p>Please enter your address details manually below, or refresh and try again.</p>
+                    </div>
+                `;
+            }
+        } else if (mapDiv) {
+            mapDiv.innerHTML = `
+                <div style="padding: 50px; text-align: center; color: #666; background: #f8f9fa; border-radius: 8px;">
+                    <i class="fas fa-map-marked-alt" style="font-size: 3em; margin-bottom: 20px; color: #ccc;"></i>
+                    <h3 style="color: #0033A0; margin-bottom: 10px;">Loading Google Maps...</h3>
+                    <p>This may take a few seconds to load.</p>
+                </div>
+            `;
+        }
+    }
+
+    function initFormValidation() {
+        const form = document.querySelector('.property-form-modern');
+        const submitBtn = document.querySelector('.submit-btn');
+        const cancelBtn = document.querySelector('.cancel-btn');
+        const uploadBtn = document.querySelector('.upload-btn');
+
+        // Real-time validation
+        const requiredFields = form.querySelectorAll('input[required], select[required], textarea[required]');
+        requiredFields.forEach(field => {
+            field.addEventListener('blur', function() {
+                validateField(this);
+            });
+        });
+
+        function validateField(field) {
+            const value = field.value.trim();
+            const fieldGroup = field.closest('.field-group');
+
+            // Remove existing error messages
+            const existingError = fieldGroup.querySelector('.field-error');
+            if (existingError) existingError.remove();
+
+            if (field.hasAttribute('required') && !value) {
+                field.style.borderColor = '#dc3545';
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'field-error';
+                errorDiv.style.color = '#dc3545';
+                errorDiv.style.fontSize = '0.85em';
+                errorDiv.style.marginTop = '5px';
+                errorDiv.textContent = 'This field is required.';
+                fieldGroup.appendChild(errorDiv);
+                return false;
+            } else {
+                field.style.borderColor = '#28a745';
+                return true;
+            }
+        }
+
+        // Cancel button functionality
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', function(e) {
+                const confirmCancel = confirm('Are you sure you want to cancel? Any unsaved changes will be lost.');
+                if (!confirmCancel) {
+                    e.preventDefault();
+                    return false;
+                }
+                // window.history.back() will be called by the onclick attribute
+            });
+        }
+
+    }
+
+
+
+    // Custom validation for the price field
+    function validatePriceField() {
+        const priceInput = document.querySelector('.price-input-highlight');
+        if (!priceInput) return true; // Skip if field doesn't exist
+
+        const value = priceInput.value.trim();
+        const priceSection = priceInput.closest('.price-highlight');
+
+        // Remove existing error messages
+        const existingError = priceSection.querySelector('.field-error');
+        if (existingError) existingError.remove();
+
+        if (!value || value === '0' || parseFloat(value) <= 0) {
+            priceInput.style.borderColor = '#dc3545';
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'field-error';
+            errorDiv.style.color = '#dc3545';
+            errorDiv.style.fontSize = '0.85em';
+            errorDiv.style.marginTop = '5px';
+            errorDiv.textContent = 'Please enter a valid property price.';
+            priceSection.appendChild(errorDiv);
+            return false;
+        } else {
+            priceInput.style.borderColor = '#28a745';
+            return true;
+        }
+    }
+
+    // Add validation to price field
+    const priceInput = document.querySelector('.price-input-highlight');
+    if (priceInput) {
+        priceInput.addEventListener('blur', validatePriceField);
+        priceInput.addEventListener('input', function() {
+            // Remove error styling when user starts typing
+            this.style.borderColor = '#e0e0e0';
+            const error = this.closest('.price-highlight').querySelector('.field-error');
+            if (error) error.remove();
+        });
+    }
+
+    // Form submission handling
+        if (submitBtn) {
+            submitBtn.addEventListener('click', function(e) {
+                e.preventDefault(); // Always prevent default submission until validation passes
+
+                // Validate all required fields before submission
+                let isValid = true;
+
+                // Validate regular form fields
+                requiredFields.forEach(field => {
+                    if (!validateField(field)) {
+                        isValid = false;
+                    }
+                });
+
+                // Validate price field specifically
+                if (!validatePriceField()) {
+                    isValid = false;
+                }
+
+                if (!isValid) {
+                    // Scroll to first error
+                    const firstError = form.querySelector('.field-error');
+                    if (firstError) {
+                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                    return false; // Don't submit
+                }
+
+                // Show loading state and submit
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Property...';
+                this.disabled = true;
+
+                // Submit the form
+                setTimeout(() => {
+                    form.submit();
+                }, 100); // Small delay to show loading state
+            });
+        }
+
+        // Auto-save draft (optional)
+        let autoSaveTimer;
+        form.addEventListener('input', function() {
+            clearTimeout(autoSaveTimer);
+            autoSaveTimer = setTimeout(() => {
+                // Could implement auto-save functionality here
+                console.log('Form changed - could auto-save draft');
+            }, 2000);
+        });
+    }
+});
+</script>
+{% endblock %}
 
 {% block content %}
-    <div class="container">
-        <h2>{{ action }} Property</h2>
-        <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit" class="btn btn-primary">{{ action }} Property</button>
-        </form>
+<div class="property-create-container">
+    <!-- Form Header -->
+    <div class="property-form-header">
+        <h2><i class="fas fa-plus-circle"></i> {{ action }} Property</h2>
+        <p>Add your property to the Nepal Real Estate marketplace and reach thousands of potential buyers</p>
     </div>
+
+
+
+    <!-- Property Form -->
+    <form method="post" enctype="multipart/form-data" class="property-form-modern">
+        {% csrf_token %}
+
+        <div class="form-sections">
+            <!-- Basic Information -->
+            <div class="form-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i class="fas fa-home"></i>
+                    </div>
+                    <div>
+                        <h3 class="section-title">Basic Property Information</h3>
+                        <p style="margin: 5px 0 0 0; color: #666; font-size: 0.9em;">Tell us about your property basics</p>
+                    </div>
+                </div>
+
+                <div class="field-row">
+                    <div class="field-group">
+                        <label for="{{ form.title.id_for_label }}">Property Title *</label>
+                        {{ form.title }}
+                        {% if form.title.errors %}{{ form.title.errors }}{% endif %}
+                    </div>
+                    <div class="field-group">
+                        <label for="{{ form.property_type.id_for_label }}">Property Type *</label>
+                        {{ form.property_type }}
+                        {% if form.property_type.errors %}{{ form.property_type.errors }}{% endif %}
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label for="{{ form.description.id_for_label }}">Property Description *</label>
+                    {{ form.description }}
+                    {% if form.description.errors %}{{ form.description.errors }}{% endif %}
+                </div>
+
+                <div class="field-row">
+                    <div class="field-group">
+                        <label for="{{ form.status.id_for_label }}">Listing Type *</label>
+                        {{ form.status }}
+                        {% if form.status.errors %}{{ form.status.errors }}{% endif %}
+                    </div>
+                    <div class="field-group">
+                        <label for="{{ form.year_built.id_for_label }}">Year Built</label>
+                        {{ form.year_built }}
+                        {% if form.year_built.errors %}{{ form.year_built.errors }}{% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Location & Address -->
+            <div class="form-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div>
+                        <h3 class="section-title">Location & Address</h3>
+                        <p style="margin: 5px 0 0 0; color: #666; font-size: 0.9em;">Where is your property located?</p>
+                    </div>
+                </div>
+
+                <div class="field-row">
+                    <div class="field-group">
+                        <label for="{{ form.address.id_for_label }}">Street Address *</label>
+                        {{ form.address }}
+                        {% if form.address.errors %}{{ form.address.errors }}{% endif %}
+                    </div>
+                    <div class="field-group">
+                        <label for="{{ form.city.id_for_label }}">City *</label>
+                        {{ form.city }}
+                        {% if form.city.errors %}{{ form.city.errors }}{% endif %}
+                    </div>
+                </div>
+
+                <div class="field-row">
+                    <div class="field-group">
+                        <label for="{{ form.state.id_for_label }}">State/Province *</label>
+                        {{ form.state }}
+                        {% if form.state.errors %}{{ form.state.errors }}{% endif %}
+                    </div>
+                    <div class="field-group">
+                        <label for="{{ form.zip_code.id_for_label }}">Zip/Postal Code</label>
+                        {{ form.zip_code }}
+                        {% if form.zip_code.errors %}{{ form.zip_code.errors }}{% endif %}
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label for="{{ form.country.id_for_label }}">Country</label>
+                    {{ form.country }}
+                    {% if form.country.errors %}{{ form.country.errors }}{% endif %}
+                </div>
+
+                <!-- Location Map -->
+                <div class="location-map-container">
+                    <label>Pin Your Property Location on Map</label>
+                    <p style="color: #666; font-size: 0.9em; margin-bottom: 15px;">
+                        Click on the map to set the exact location of your property, or drag the marker to fine-tune
+                    </p>
+                    <div id="property-location-map"></div>
+                    <div id="location-coords" class="location-coords">
+                        <div class="coords-display">
+                            📍 Click on the map above to set your property location
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hidden latitude and longitude fields -->
+                {{ form.latitude }}
+                {{ form.longitude }}
+            </div>
+
+            <!-- Pricing & Financial Data -->
+            <div class="form-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i class="fas fa-rupee-sign"></i>
+                    </div>
+                    <div>
+                        <h3 class="section-title">Pricing & Financials</h3>
+                        <p style="margin: 5px 0 0 0; color: #666; font-size: 0.9em;">Set your property price and financial details</p>
+                    </div>
+                </div>
+
+                <div class="price-highlight">
+                    <h4 style="margin: 0 0 20px 0;">Property Price (NPR)</h4>
+                    <div class="field-group">
+                        <input type="number" name="price" value="{{ form.price.value }}"
+                               placeholder="Enter price in Nepali Rupees"
+                               class="price-input-highlight"
+                               required>
+                        {% if form.price.errors %}{{ form.price.errors }}{% endif %}
+                    </div>
+                </div>
+
+                <div class="field-row">
+                    <div class="field-group">
+                        <label for="{{ form.square_footage.id_for_label }}">Square Footage</label>
+                        {{ form.square_footage }}
+                        {% if form.square_footage.errors %}{{ form.square_footage.errors }}{% endif %}
+                    </div>
+                    <div class="field-group">
+                        <label for="{{ form.lot_size.id_for_label }}">Lot Size</label>
+                        {{ form.lot_size }}
+                        {% if form.lot_size.errors %}{{ form.lot_size.errors }}{% endif %}
+                    </div>
+                </div>
+
+                <div class="field-row">
+                    <div class="field-group">
+                        <label for="{{ form.cap_rate.id_for_label }}">Cap Rate (%)</label>
+                        {{ form.cap_rate }}
+                        {% if form.cap_rate.errors %}{{ form.cap_rate.errors }}{% endif %}
+                    </div>
+                    <div class="field-group">
+                        <label for="{{ form.noi.id_for_label }}">NOI (Annual)</label>
+                        {{ form.noi }}
+                        {% if form.noi.errors %}{{ form.noi.errors }}{% endif %}
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label for="{{ form.rent_roll.id_for_label }}">Rent Roll Summary</label>
+                    {{ form.rent_roll }}
+                    {% if form.rent_roll.errors %}{{ form.rent_roll.errors }}{% endif %}
+                </div>
+
+                <div class="field-group">
+                    <label for="{{ form.expense_summaries.id_for_label }}">Expense Summary</label>
+                    {{ form.expense_summaries }}
+                    {% if form.expense_summaries.errors %}{{ form.expense_summaries.errors }}{% endif %}
+                </div>
+            </div>
+
+            <!-- Amenities & Features -->
+            <div class="form-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div>
+                        <h3 class="section-title">Amenities & Features</h3>
+                        <p style="margin: 5px 0 0 0; color: #666; font-size: 0.9em;">What makes your property special?</p>
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label for="{{ form.amenities.id_for_label }}">Property Amenities</label>
+                    {{ form.amenities }}
+                    {% if form.amenities.errors %}{{ form.amenities.errors }}{% endif %}
+                </div>
+
+                <div class="field-group">
+                    <label for="{{ form.zoning.id_for_label }}">Zoning</label>
+                    {{ form.zoning }}
+                    {% if form.zoning.errors %}{{ form.zoning.errors }}{% endif %}
+                </div>
+            </div>
+
+            <!-- Media & Broker Info -->
+            <div class="form-section">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i class="fas fa-images"></i>
+                    </div>
+                    <div>
+                        <h3 class="section-title">Media & Broker Information</h3>
+                        <p style="margin: 5px 0 0 0; color: #666; font-size: 0.9em;">Add images and contact information</p>
+                    </div>
+                </div>
+
+                <!-- Image Upload -->
+                <div class="image-upload-section">
+                    <div class="upload-icon">
+                        <i class="fas fa-camera"></i>
+                    </div>
+                    <h4>Property Image</h4>
+                    <p>Use the form field below to upload a property image (Max 5MB)</p>
+                    <p style="color: #666; font-size: 0.9em; margin-top: 10px;">
+                        You can add a caption to the image for better property description.
+                    </p>
+                </div>
+
+                <!-- Image Formset -->
+                <div id="image-formset">
+                    {{ image_formset.management_form }}
+                    {% for image_form in image_formset %}
+                        <div class="image-form-item" style="margin-bottom: 20px; padding: 15px; border: 1px solid #e0e0e0; border-radius: 8px; background: #f9f9f9;">
+                            <div style="display: flex; gap: 15px; align-items: flex-start;">
+                                <div style="flex: 1;">
+                                    <label for="{{ image_form.image.id_for_label }}" style="font-weight: 600; color: #333; display: block; margin-bottom: 5px;">
+                                        Image {{ forloop.counter }} {{ image_form.image.errors }}
+                                    </label>
+                                    {{ image_form.image }}
+                                    {% if image_form.image.errors %}
+                                        <div class="errorlist" style="color: #dc3545; font-size: 0.85em; margin-top: 5px;">
+                                            {{ image_form.image.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div style="flex: 1;">
+                                    <label for="{{ image_form.caption.id_for_label }}" style="font-weight: 600; color: #333; display: block; margin-bottom: 5px;">
+                                        Caption (Optional) {{ image_form.caption.errors }}
+                                    </label>
+                                    {{ image_form.caption }}
+                                    {% if image_form.caption.errors %}
+                                        <div class="errorlist" style="color: #dc3545; font-size: 0.85em; margin-top: 5px;">
+                                            {{ image_form.caption.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                {% if image_formset.can_delete %}
+                                    <div style="display: flex; align-items: center; margin-top: 24px;">
+                                        {{ image_form.DELETE }}
+                                        <label for="{{ image_form.DELETE.id_for_label }}" style="margin-left: 5px; color: #666;">
+                                            Remove
+                                        </label>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+
+                    {% if image_formset.non_form_errors %}
+                        <div class="errorlist" style="color: #dc3545; margin-top: 10px;">
+                            {{ image_formset.non_form_errors }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="field-group">
+                    <label for="{{ form.floor_plan_image.id_for_label }}">Floor Plan Image</label>
+                    {{ form.floor_plan_image }}
+                    {% if form.floor_plan_image.errors %}{{ form.floor_plan_image.errors }}{% endif %}
+                </div>
+
+                <div class="field-group">
+                    <label for="{{ form.virtual_tour_url.id_for_label }}">Virtual Tour URL</label>
+                    {{ form.virtual_tour_url }}
+                    {% if form.virtual_tour_url.errors %}{{ form.virtual_tour_url.errors }}{% endif %}
+                </div>
+
+                <h4 style="color: #0033A0; margin: 30px 0 20px 0;">Broker/Contact Information</h4>
+                <div class="field-row">
+                    <div class="field-group">
+                        <label for="{{ form.broker_name.id_for_label }}">Broker Name</label>
+                        {{ form.broker_name }}
+                        {% if form.broker_name.errors %}{{ form.broker_name.errors }}{% endif %}
+                    </div>
+                    <div class="field-group">
+                        <label for="{{ form.broker_email.id_for_label }}">Broker Email</label>
+                        {{ form.broker_email }}
+                        {% if form.broker_email.errors %}{{ form.broker_email.errors }}{% endif %}
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label for="{{ form.broker_phone.id_for_label }}">Broker Phone</label>
+                    {{ form.broker_phone }}
+                    {% if form.broker_phone.errors %}{{ form.broker_phone.errors }}{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+            <button type="button" class="cancel-btn" onclick="window.history.back()">
+                <i class="fas fa-times"></i> Cancel
+            </button>
+            <button type="submit" class="submit-btn">
+                <i class="fas fa-rocket"></i> {{ action }} Property
+            </button>
+        </div>
+    </form>
+</div>
 {% endblock %}

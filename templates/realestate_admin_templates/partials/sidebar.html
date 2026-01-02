@@ -1,0 +1,106 @@
+<aside class="sidebar bg-light vh-100 position-fixed border-end p-3">
+  <div class="mb-4">
+    <a href="{% url 'admin_dashboard' %}" class="text-decoration-none">
+      <h5 class="m-0" style="color: #0033A0; font-weight: 700;">🏠 Admin Panel</h5>
+      <small class="text-muted">RealEstateNet</small>
+    </a>
+  </div>
+
+  <ul class="nav flex-column">
+    <li class="nav-item">
+      <a class="nav-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}" href="{% url 'admin_dashboard' %}">
+        <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+      </a>
+    </li>
+
+    {% if user.admin_permissions.manage_users %}
+    <li class="nav-item mt-2">
+      <strong class="text-muted small" style="padding-left: 15px;">Users</strong>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if request.resolver_match.url_name == 'admin_users' %}active{% endif %}" href="{% url 'admin_users' %}">
+        <i class="fas fa-users me-2"></i>All Users
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if request.resolver_match.url_name == 'admin_agents' %}active{% endif %}" href="{% url 'admin_agents' %}">
+        <i class="fas fa-user-tie me-2"></i>Agents
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if request.resolver_match.url_name == 'admin_companies' %}active{% endif %}" href="{% url 'admin_companies' %}">
+        <i class="fas fa-building me-2"></i>Companies
+      </a>
+    </li>
+    {% endif %}
+
+    {% if user.admin_permissions.manage_properties %}
+    <li class="nav-item mt-2">
+      <strong class="text-muted small" style="padding-left: 15px;">Properties</strong>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if request.resolver_match.url_name == 'admin_properties' %}active{% endif %}" href="{% url 'admin_properties' %}">
+        <i class="fas fa-home me-2"></i>All Listings
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if request.resolver_match.url_name == 'admin_pending' %}active{% endif %}" href="{% url 'admin_pending' %}">
+        <i class="fas fa-clock me-2"></i>Pending Approval
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if request.resolver_match.url_name == 'admin_featured' %}active{% endif %}" href="{% url 'admin_featured' %}">
+        <i class="fas fa-star me-2"></i>Featured
+      </a>
+    </li>
+    {% endif %}
+
+    {% if user.admin_permissions.manage_payments %}
+    <li class="nav-item mt-2">
+      <strong class="text-muted small" style="padding-left: 15px;">Finance</strong>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if request.resolver_match.url_name == 'admin_payments' %}active{% endif %}" href="{% url 'admin_payments' %}">
+        <i class="fas fa-credit-card me-2"></i>Payments
+      </a>
+    </li>
+    {% endif %}
+
+    {% if user.admin_permissions.manage_content %}
+    <li class="nav-item mt-2">
+      <strong class="text-muted small" style="padding-left: 15px;">Content</strong>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if request.resolver_match.url_name == 'admin_cms' %}active{% endif %}" href="{% url 'admin_cms' %}">
+        <i class="fas fa-edit me-2"></i>CMS
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if request.resolver_match.url_name == 'admin_blog' %}active{% endif %}" href="{% url 'admin_blog' %}">
+        <i class="fas fa-blog me-2"></i>Blog
+      </a>
+    </li>
+    {% endif %}
+
+    {% if user.admin_permissions.view_logs or user.admin_permissions.export_data %}
+    <li class="nav-item mt-2">
+      <strong class="text-muted small" style="padding-left: 15px;">Reports & Analytics</strong>
+    </li>
+    {% if user.admin_permissions.view_logs %}
+    <li class="nav-item">
+      <a class="nav-link {% if request.resolver_match.url_name == 'admin_reports' %}active{% endif %}" href="{% url 'admin_reports' %}">
+        <i class="fas fa-chart-bar me-2"></i>Reports
+      </a>
+    </li>
+    {% endif %}
+    {% endif %}
+
+    {% if user.admin_permissions.system_settings %}
+    <li class="nav-item mt-3">
+      <a class="btn w-100" href="{% url 'admin_settings' %}" style="background: linear-gradient(135deg, #DC143C, #0033A0); color: white; border: none;">
+        <i class="fas fa-cog me-2"></i>System Settings
+      </a>
+    </li>
+    {% endif %}
+  </ul>
+</aside>

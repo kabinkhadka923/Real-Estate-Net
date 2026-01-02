@@ -3,7 +3,20 @@
 
 {% block extrastyle %}
 {{ block.super }}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
 <style>
+/* Nepal Flag Brand Colors */
+:root {
+    --nepal-blue: #0033A0;
+    --nepal-crimson: #DC143C;
+    --nepal-white: #FFFFFF;
+    --sidebar-bg: var(--nepal-blue);
+    --sidebar-text: var(--nepal-white);
+    --primary-gradient: linear-gradient(135deg, var(--nepal-blue), var(--nepal-crimson));
+}
+
 /* Ensure apply buttons are visible in admin */
 input[type="submit"][value="Apply"],
 input[type="submit"][value="apply"],
@@ -13,7 +26,7 @@ input[type="submit"][name="action"],
 input[type="submit"][name="index"],
 .changelist-actions .select-across,
 .changelist-actions input[type="submit"] {
-    background: linear-gradient(135deg, #28a745, #20c997) !important;
+    background: var(--primary-gradient) !important;
     border: none !important;
     color: white !important;
     padding: 8px 16px !important;
@@ -37,15 +50,15 @@ input[type="submit"][value="apply"]:hover,
 input[type="submit"][name="action"]:hover,
 input[type="submit"][name="index"]:hover,
 .changelist-actions input[type="submit"]:hover {
-    background: linear-gradient(135deg, #218838, #17a2b8) !important;
+    background: linear-gradient(135deg, var(--nepal-crimson), var(--nepal-blue)) !important;
     transform: translateY(-1px) !important;
-    box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3) !important;
+    box-shadow: 0 4px 8px rgba(0,51,160,0.3) !important;
 }
 
 /* Filter apply buttons */
 #changelist-filter input[type="submit"],
 #changelist-filter button {
-    background: linear-gradient(135deg, #007bff, #0056b3) !important;
+    background: var(--primary-gradient) !important;
     color: white !important;
     border: none !important;
     padding: 6px 12px !important;
@@ -57,13 +70,13 @@ input[type="submit"][name="index"]:hover,
 
 #changelist-filter input[type="submit"]:hover,
 #changelist-filter button:hover {
-    background: linear-gradient(135deg, #0056b3, #004085) !important;
+    background: linear-gradient(135deg, var(--nepal-crimson), var(--nepal-blue)) !important;
 }
 
 /* Action apply buttons */
 #changelist-form input[type="submit"],
 .submit-row input[type="submit"] {
-    background: linear-gradient(135deg, #dc3545, #c82333) !important;
+    background: linear-gradient(135deg, var(--nepal-crimson), #c82333) !important;
     color: white !important;
     border: none !important;
     padding: 8px 16px !important;
@@ -101,6 +114,176 @@ input[type="button"],
     display: inline-block !important;
     visibility: visible !important;
     opacity: 1 !important;
+}
+
+/* Custom button styles */
+.button.primary-action {
+    background: var(--primary-gradient) !important;
+    color: white !important;
+    border: none !important;
+    padding: 8px 16px !important;
+    border-radius: 6px !important;
+    font-weight: 500 !important;
+    text-decoration: none !important;
+    display: inline-block !important;
+    transition: all 0.3s ease !important;
+}
+
+.button.primary-action:hover {
+    background: linear-gradient(135deg, var(--nepal-crimson), var(--nepal-blue)) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 8px rgba(0,51,160,0.3) !important;
+    color: white !important;
+    text-decoration: none !important;
+}
+
+.button.success-action {
+    background: linear-gradient(135deg, #28a745, #20c997) !important;
+    color: white !important;
+    border: none !important;
+    padding: 8px 16px !important;
+    border-radius: 6px !important;
+    font-weight: 500 !important;
+    text-decoration: none !important;
+    display: inline-block !important;
+    transition: all 0.3s ease !important;
+}
+
+.button.success-action:hover {
+    background: linear-gradient(135deg, #218838, #17a2b8) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3) !important;
+    color: white !important;
+    text-decoration: none !important;
+}
+
+.button.warning-action {
+    background: linear-gradient(135deg, #ffc107, #fd7e14) !important;
+    color: #333 !important;
+    border: none !important;
+    padding: 8px 16px !important;
+    border-radius: 6px !important;
+    font-weight: 500 !important;
+    text-decoration: none !important;
+    display: inline-block !important;
+    transition: all 0.3s ease !important;
+}
+
+.button.warning-action:hover {
+    background: linear-gradient(135deg, #e0a800, #d39e00) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 8px rgba(255, 193, 7, 0.3) !important;
+    color: #333 !important;
+    text-decoration: none !important;
+}
+
+.button.info-action {
+    background: linear-gradient(135deg, #17a2b8, #138496) !important;
+    color: white !important;
+    border: none !important;
+    padding: 8px 16px !important;
+    border-radius: 6px !important;
+    font-weight: 500 !important;
+    text-decoration: none !important;
+    display: inline-block !important;
+    transition: all 0.3s ease !important;
+}
+
+.button.info-action:hover {
+    background: linear-gradient(135deg, #138496, #117a8b) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 8px rgba(23, 162, 184, 0.3) !important;
+    color: white !important;
+    text-decoration: none !important;
+}
+
+.button.secondary-action {
+    background: linear-gradient(135deg, #6c757d, #5a6268) !important;
+    color: white !important;
+    border: none !important;
+    padding: 8px 16px !important;
+    border-radius: 6px !important;
+    font-weight: 500 !important;
+    text-decoration: none !important;
+    display: inline-block !important;
+    transition: all 0.3s ease !important;
+}
+
+.button.secondary-action:hover {
+    background: linear-gradient(135deg, #5a6268, #495057) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3) !important;
+    color: white !important;
+    text-decoration: none !important;
+}
+
+.button.danger-action {
+    background: linear-gradient(135deg, var(--nepal-crimson), #c82333) !important;
+    color: white !important;
+    border: none !important;
+    padding: 8px 16px !important;
+    border-radius: 6px !important;
+    font-weight: 500 !important;
+    text-decoration: none !important;
+    display: inline-block !important;
+    transition: all 0.3s ease !important;
+}
+
+.button.danger-action:hover {
+    background: linear-gradient(135deg, #c82333, #a02622) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3) !important;
+    color: white !important;
+    text-decoration: none !important;
+}
+
+/* Stats cards styling */
+.stats-properties { background: linear-gradient(135deg, #0033A0, #DC143C) !important; }
+.stats-verified { background: linear-gradient(135deg, #28a745, #20c997) !important; }
+.stats-premium { background: linear-gradient(135deg, #ffecd2, #fcb69f) !important; color: #d63031 !important; }
+.stats-recent { background: linear-gradient(135deg, #c6ffdd, #fbd786) !important; color: #2d3436 !important; }
+.stats-users { background: linear-gradient(135deg, #e3f2fd, #90caf9) !important; }
+.stats-brokers { background: linear-gradient(135deg, #f3e5f5, #ba68c8) !important; }
+.stats-buyers { background: linear-gradient(135deg, #e8f5e8, #66bb6a) !important; }
+.stats-pending { background: linear-gradient(135deg, #fff3e0, #ffb74d) !important; }
+.stats-inquiries { background: linear-gradient(135deg, #fce4ec, #f48fb1) !important; }
+.stats-unresolved { background: linear-gradient(135deg, #ffebee, #ef5350) !important; }
+.stats-premium-users { background: linear-gradient(135deg, #f8f9fa, #343a40) !important; color: white !important; }
+.stats-images { background: linear-gradient(135deg, #e1f5fe, #01579b) !important; }
+.stats-flagged { background: linear-gradient(135deg, #ffebee, #d32f2f) !important; }
+.stats-blog { background: linear-gradient(135deg, #f3e5f5, #7b1fa2) !important; }
+.stats-legal { background: linear-gradient(135deg, #fff8e1, #f57c00) !important; }
+.stats-contacts { background: linear-gradient(135deg, #e0f7fa, #00838f) !important; }
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .dashboard-stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) !important;
+    }
+
+    .action-buttons {
+        flex-direction: column !important;
+    }
+
+    .activity-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .status-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .moderation-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .properties-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .tools-grid {
+        grid-template-columns: 1fr !important;
+    }
 }
 </style>
 {% endblock %}

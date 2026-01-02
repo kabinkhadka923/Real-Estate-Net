@@ -1,0 +1,419 @@
+{% extends 'realestate_admin_templates/base_admin.html' %}
+
+{% block title %}Properties • Admin{% endblock %}
+
+{% block page_heading %}
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <h3 class="mb-0" style="color: #0033A0; font-weight: 700;">🏠 Property Management</h3>
+  <small class="text-muted">Manage property listings and approvals</small>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Action Bar -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h5 class="mb-0">All Properties ({{ total_properties }})</h5>
+    <small class="text-muted">Approve, reject, and manage property listings</small>
+  </div>
+  <div class="d-flex gap-2">
+    <button class="btn" style="background: linear-gradient(135deg, #DC143C, #0033A0); color: white; border: none;" onclick="exportProperties()">
+      <i class="fas fa-download me-1"></i>Export CSV
+    </button>
+    <button class="btn btn-success" onclick="showBulkActions()">
+      <i class="fas fa-tasks me-1"></i>Bulk Actions
+    </button>
+  </div>
+</div>
+
+<!-- Filter Tabs -->
+<ul class="nav nav-tabs mb-4" id="propertyTabs" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button" role="tab">
+      All Properties
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab">
+      Pending Approval <span class="badge bg-warning ms-1">{{ pending_count|default:0 }}</span>
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="featured-tab" data-bs-toggle="tab" data-bs-target="#featured" type="button" role="tab">
+      Premium <span class="badge" style="background: linear-gradient(135deg, #DC143C, #0033A0); color: white;">{{ featured_count|default:0 }}</span>
+    </button>
+  </li>
+</ul>
+
+<!-- Bulk Actions Bar (Hidden by default) -->
+<div id="bulk-actions-bar" class="card mb-3" style="display: none; background: linear-gradient(135deg, #0033A0, #DC143C); color: white;">
+  <div class="card-body py-2">
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        <span id="selected-count">0 properties selected</span>
+      </div>
+      <div class="col-md-4 text-end">
+        <button class="btn btn-light btn-sm me-2" onclick="bulkApprove()">
+          <i class="fas fa-check me-1"></i>Approve
+        </button>
+        <button class="btn btn-warning btn-sm me-2" onclick="bulkReject()">
+          <i class="fas fa-times me-1"></i>Reject
+        </button>
+        <button class="btn btn-info btn-sm me-2" onclick="bulkMakePremium()">
+          <i class="fas fa-star me-1"></i>Make Premium
+        </button>
+        <button class="btn btn-secondary btn-sm" onclick="clearSelection()">
+          <i class="fas fa-times me-1"></i>Clear
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Properties Table -->
+<div class="card">
+  <div class="card-header" style="background: linear-gradient(135deg, #0033A0, #DC143C); color: white;">
+    <h6 class="mb-0"><i class="fas fa-home me-2"></i>Property Listings</h6>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table id="properties-table" class="table table-hover table-striped">
+        <thead style="background: rgba(0, 51, 160, 0.1);">
+          <tr>
+            <th width="40">
+              <input type="checkbox" id="select-all" class="form-check-input">
+            </th>
+            <th width="60">ID</th>
+            <th>Property</th>
+            <th>Agent</th>
+            <th>Price</th>
+            <th>Location</th>
+            <th>Status</th>
+            <th>Views</th>
+            <th width="180">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for property in properties %}
+          <tr data-property-id="{{ property.id }}">
+            <td>
+              <input type="checkbox" class="property-checkbox form-check-input" value="{{ property.id }}">
+            </td>
+            <td>
+              <strong>#{{ property.id }}</strong>
+            </td>
+            <td>
+              <div class="d-flex align-items-center">
+                {% if property.floor_plan_image %}
+                  <img src="{{ property.floor_plan_image.url }}" alt="Property" class="rounded me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                {% else %}
+                  <div class="bg-light rounded d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                    <i class="fas fa-home text-muted"></i>
+                  </div>
+                {% endif %}
+                <div>
+                  <strong>{{ property.title|truncatechars:40 }}</strong>
+                  {% if property.is_premium %}
+                    <br><small class="text-warning"><i class="fas fa-star me-1"></i>Premium</small>
+                  {% endif %}
+                </div>
+              </div>
+            </td>
+            <td>
+              {% if property.agent %}
+                <div>
+                  <strong>{{ property.agent.get_full_name|default:property.agent.username }}</strong>
+                  <br><small class="text-muted">{{ property.agent.user_type|title }}</small>
+                </div>
+              {% else %}
+                <span class="text-muted">No Agent</span>
+              {% endif %}
+            </td>
+            <td>
+              <strong style="color: #DC143C;">NPR {{ property.price|stringformat:',d' }}</strong>
+            </td>
+            <td>
+              {{ property.city }}, {{ property.state }}
+            </td>
+            <td>
+              {% if property.status == 'approved' %}
+                <span class="badge bg-success">Approved</span>
+              {% elif property.status == 'pending' %}
+                <span class="badge bg-warning">Pending</span>
+              {% elif property.status == 'rejected' %}
+                <span class="badge bg-danger">Rejected</span>
+              {% else %}
+                <span class="badge bg-secondary">{{ property.status|title }}</span>
+              {% endif %}
+              {% if property.is_verified %}
+                <br><small class="text-success"><i class="fas fa-shield-alt me-1"></i>Verified</small>
+              {% endif %}
+            </td>
+            <td>
+              <span class="badge bg-info">{{ property.views|default:0 }}</span>
+            </td>
+            <td>
+              <div class="btn-group btn-group-sm" role="group">
+                <a href="{% url 'admin_property_detail' property.id %}" class="btn btn-outline-primary btn-sm" title="View Details">
+                  <i class="fas fa-eye"></i>
+                </a>
+                {% if property.status == 'pending' %}
+                  <button class="btn btn-success btn-sm" onclick="approveProperty({{ property.id }})" title="Approve Property">
+                    <i class="fas fa-check"></i>
+                  </button>
+                  <button class="btn btn-danger btn-sm" onclick="rejectProperty({{ property.id }})" title="Reject Property">
+                    <i class="fas fa-times"></i>
+                  </button>
+                {% endif %}
+                <button class="btn btn-outline-warning btn-sm" onclick="togglePremium({{ property.id }})" title="Toggle Premium">
+                  <i class="fas fa-star"></i>
+                </button>
+                <button class="btn btn-outline-danger btn-sm" onclick="deleteProperty({{ property.id }})" title="Delete Property">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="9" class="text-center py-4">
+              <i class="fas fa-home fa-2x text-muted mb-2"></i>
+              <p class="text-muted">No properties found</p>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Property Statistics Cards -->
+<div class="row mt-4">
+  <div class="col-md-3">
+    <div class="card text-center">
+      <div class="card-body">
+        <div style="font-size: 2em; color: #0033A0;">🏠</div>
+        <h5 class="card-title">{{ total_properties }}</h5>
+        <p class="card-text text-muted">Total Properties</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center">
+      <div class="card-body">
+        <div style="font-size: 2em; color: #28a745;">✅</div>
+        <h5 class="card-title">{{ verified_properties|default:0 }}</h5>
+        <p class="card-text text-muted">Verified</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center">
+      <div class="card-body">
+        <div style="font-size: 2em; color: #ffc107;">🟡</div>
+        <h5 class="card-title">{{ pending_count|default:0 }}</h5>
+        <p class="card-text text-muted">Pending Review</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center">
+      <div class="card-body">
+        <div style="font-size: 2em; color: #DC143C;">💎</div>
+        <h5 class="card-title">{{ featured_count|default:0 }}</h5>
+        <p class="card-text text-muted">Premium</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Initialize DataTable
+$(document).ready(function() {
+    $('#properties-table').DataTable({
+        responsive: true,
+        pageLength: 25,
+        language: {
+            search: "Search properties:",
+            lengthMenu: "Show _MENU_ properties per page",
+            info: "Showing _START_ to _END_ of _TOTAL_ properties",
+            paginate: {
+                first: "First",
+                last: "Last",
+                next: "Next",
+                previous: "Previous"
+            }
+        },
+        columnDefs: [
+            { orderable: false, targets: [0, 8] } // Disable sorting on checkbox and actions columns
+        ],
+        initComplete: function() {
+            // Add fade-in animation
+            $('.table').addClass('fade-in');
+        }
+    });
+});
+
+// Bulk selection handling
+$('#select-all').on('change', function() {
+    $('.property-checkbox').prop('checked', this.checked);
+    updateBulkActionsVisibility();
+});
+
+$(document).on('change', '.property-checkbox', function() {
+    updateBulkActionsVisibility();
+});
+
+function updateBulkActionsVisibility() {
+    const checkedBoxes = $('.property-checkbox:checked');
+    const bulkActionsBar = $('#bulk-actions-bar');
+    const selectedCount = $('#selected-count');
+
+    if (checkedBoxes.length > 0) {
+        bulkActionsBar.show();
+        selectedCount.text(`${checkedBoxes.length} propert${checkedBoxes.length > 1 ? 'ies' : 'y'} selected`);
+    } else {
+        bulkActionsBar.hide();
+    }
+}
+
+function showBulkActions() {
+    $('#select-all').prop('checked', true).trigger('change');
+}
+
+// Property action functions
+function approveProperty(propertyId) {
+    if (confirm('Are you sure you want to approve this property?')) {
+        ajaxPost(`/admin/api/property/approve/`, { id: propertyId }, function() {
+            location.reload();
+        });
+    }
+}
+
+function rejectProperty(propertyId) {
+    const reason = prompt('Rejection reason (optional):');
+    ajaxPost(`/admin/api/property/reject/`, {
+        id: propertyId,
+        reason: reason || 'No reason provided'
+    }, function() {
+        location.reload();
+    });
+}
+
+function togglePremium(propertyId) {
+    ajaxPost(`/admin/api/property/toggle-premium/`, { id: propertyId }, function(response) {
+        showToast(`Property ${response.is_premium ? 'marked as' : 'removed from'} premium`, 'success');
+        setTimeout(() => location.reload(), 1000);
+    });
+}
+
+function deleteProperty(propertyId) {
+    if (confirm('Are you sure you want to permanently delete this property? This action cannot be undone.')) {
+        ajaxPost(`/admin/api/property/delete/`, { id: propertyId }, function() {
+            location.reload();
+        });
+    }
+}
+
+// Bulk operations
+function bulkApprove() {
+    const selectedProperties = $('.property-checkbox:checked').map(function() {
+        return this.value;
+    }).get();
+
+    if (selectedProperties.length === 0) {
+        showToast('No properties selected', 'warning');
+        return;
+    }
+
+    if (confirm(`Approve ${selectedProperties.length} selected propert${selectedProperties.length > 1 ? 'ies' : 'y'}?`)) {
+        ajaxPost(`/admin/api/bulk/property-actions/`, {
+            action: 'approve',
+            ids: JSON.stringify(selectedProperties)
+        }, function() {
+            location.reload();
+        });
+    }
+}
+
+function bulkReject() {
+    const selectedProperties = $('.property-checkbox:checked').map(function() {
+        return this.value;
+    }).get();
+
+    if (selectedProperties.length === 0) {
+        showToast('No properties selected', 'warning');
+        return;
+    }
+
+    const reason = prompt('Rejection reason for all selected properties:');
+    if (confirm(`Reject ${selectedProperties.length} selected propert${selectedProperties.length > 1 ? 'ies' : 'y'}?`)) {
+        // Note: Bulk reject would need to be implemented in the API
+        selectedProperties.forEach(id => {
+            ajaxPost(`/admin/api/property/reject/`, {
+                id: id,
+                reason: reason || 'Bulk rejection'
+            });
+        });
+        setTimeout(() => location.reload(), 1000);
+    }
+}
+
+function bulkMakePremium() {
+    const selectedProperties = $('.property-checkbox:checked').map(function() {
+        return this.value;
+    }).get();
+
+    if (selectedProperties.length === 0) {
+        showToast('No properties selected', 'warning');
+        return;
+    }
+
+    if (confirm(`Make ${selectedProperties.length} selected propert${selectedProperties.length > 1 ? 'ies' : 'y'} premium?`)) {
+        ajaxPost(`/admin/api/bulk/property-actions/`, {
+            action: 'make_premium',
+            ids: JSON.stringify(selectedProperties)
+        }, function() {
+            location.reload();
+        });
+    }
+}
+
+function clearSelection() {
+    $('.property-checkbox, #select-all').prop('checked', false);
+    updateBulkActionsVisibility();
+}
+
+// Export function
+function exportProperties() {
+    window.open('/admin/api/export/properties/csv/', '_blank');
+    showToast('Export started. Download will begin shortly.', 'info');
+}
+
+// Filter tabs
+$('#propertyTabs button').on('click', function() {
+    const target = $(this).data('bs-target');
+    // In a real implementation, this would filter the table data
+    console.log('Filtering to:', target);
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // Ctrl/Cmd + F to focus search
+    if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        $('.dataTables_filter input').focus();
+    }
+
+    // Ctrl/Cmd + A to select all
+    if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+        e.preventDefault();
+        $('#select-all').prop('checked', true).trigger('change');
+    }
+});
+</script>
+{% endblock %}

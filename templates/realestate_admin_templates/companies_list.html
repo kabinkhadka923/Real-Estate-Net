@@ -1,0 +1,293 @@
+{% extends "realestate_admin_templates/base_admin.html" %}
+{% load static %}
+
+{% block title %}Companies Management - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">🏢 Companies Management</h1>
+            <p class="text-muted">Manage real estate companies and agencies</p>
+        </div>
+        <div class="text-end">
+            <span class="badge bg-primary fs-6">{{ total_companies }} Companies</span>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Companies</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_companies }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-building fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Active Agents</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {% for company in companies %}
+                                    {{ company.verified_agents|add:0 }}{% if not forloop.last %} + {% endif %}
+                                {% empty %}0{% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Total Properties</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {% for company in companies %}
+                                    {{ company.properties_count|add:0 }}{% if not forloop.last %} + {% endif %}
+                                {% empty %}0{% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-home fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Premium Members</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {% for company in companies %}
+                                    {{ company.premium_members|add:0 }}{% if not forloop.last %} + {% endif %}
+                                {% empty %}0{% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-star fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Companies List -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-building me-2"></i>Real Estate Companies
+            </h6>
+        </div>
+        <div class="card-body">
+            {% if companies %}
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="companiesTable" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>Company Name</th>
+                                <th>Agents</th>
+                                <th>Verified Agents</th>
+                                <th>Properties</th>
+                                <th>Premium Members</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for company in companies %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="ms-3">
+                                            <div class="fw-bold text-primary">{{ company.name }}</div>
+                                            <small class="text-muted">Real Estate Company</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ company.agents_count }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-success">{{ company.verified_agents }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ company.properties_count }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-warning">{{ company.premium_members }}</span>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <button class="btn btn-sm btn-outline-primary" onclick="viewCompanyAgents('{{ company.name }}')">
+                                            <i class="fas fa-users"></i> View Agents
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-info" onclick="viewCompanyProperties('{{ company.name }}')">
+                                            <i class="fas fa-home"></i> Properties
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-building fa-4x text-gray-300 mb-3"></i>
+                    <h5 class="text-muted">No Companies Found</h5>
+                    <p class="text-muted">No real estate companies have been registered yet.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modals -->
+<!-- Company Agents Modal -->
+<div class="modal fade" id="companyAgentsModal" tabindex="-1" aria-labelledby="companyAgentsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="companyAgentsModalLabel">Company Agents</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="companyAgentsContent">
+                <!-- Content will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Company Properties Modal -->
+<div class="modal fade" id="companyPropertiesModal" tabindex="-1" aria-labelledby="companyPropertiesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="companyPropertiesModalLabel">Company Properties</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="companyPropertiesContent">
+                <!-- Content will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Initialize DataTable
+$(document).ready(function() {
+    $('#companiesTable').DataTable({
+        "pageLength": 25,
+        "ordering": true,
+        "searching": true,
+        "paging": true,
+        "info": true,
+        "responsive": true,
+        "language": {
+            "search": "Search companies:",
+            "lengthMenu": "Show _MENU_ companies per page",
+            "info": "Showing _START_ to _END_ of _TOTAL_ companies"
+        }
+    });
+});
+
+// View company agents
+function viewCompanyAgents(companyName) {
+    // This would typically make an AJAX call to get company agents
+    $('#companyAgentsModalLabel').text(companyName + ' - Agents');
+    $('#companyAgentsContent').html(`
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading agents...</p>
+        </div>
+    `);
+    $('#companyAgentsModal').modal('show');
+
+    // Simulate loading (replace with actual AJAX call)
+    setTimeout(() => {
+        $('#companyAgentsContent').html(`
+            <p class="text-muted">Feature coming soon: View all agents from ${companyName}</p>
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                This feature will display all agents belonging to this company with their contact details and performance metrics.
+            </div>
+        `);
+    }, 1000);
+}
+
+// View company properties
+function viewCompanyProperties(companyName) {
+    $('#companyPropertiesModalLabel').text(companyName + ' - Properties');
+    $('#companyPropertiesContent').html(`
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading properties...</p>
+        </div>
+    `);
+    $('#companyPropertiesModal').modal('show');
+
+    // Simulate loading (replace with actual AJAX call)
+    setTimeout(() => {
+        $('#companyPropertiesContent').html(`
+            <p class="text-muted">Feature coming soon: View all properties from ${companyName}</p>
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                This feature will display all properties listed by agents from this company with pricing and status information.
+            </div>
+        `);
+    }, 1000);
+}
+</script>
+
+<style>
+.table th {
+    background-color: #f8f9fa;
+    border-top: 2px solid #dee2e6;
+    font-weight: 600;
+}
+
+.badge {
+    font-size: 0.75em;
+}
+
+.btn-group .btn {
+    margin-right: 2px;
+}
+
+.modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+</style>
+{% endblock %}

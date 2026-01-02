@@ -13,12 +13,12 @@
 {% block og_url %}{{ request.build_absolute_uri }}{% endblock %}
 {% block og_title %}{{ post.title }} - Gorkha Real Estate Blog{% endblock %}
 {% block og_description %}Read this insightful article: "{{ post.title }}" by {{ post.author.get_full_name|default:post.author.username }}. {% if post.excerpt %}{{ post.excerpt }}{% else %}{{ post.content|striptags|truncatechars:200 }}{% endif %}{% endblock %}
-{% block og_image %}{% if post.image %}{{ post.image.url }}{% else %}{% static 'images/logo.jpeg' %}{% endif %}{% endblock %}
+{% block og_image %}{% if post.image %}{{ post.image.url }}{% else %}{% static 'logo.png' %}{% endif %}{% endblock %}
 
 {% block twitter_card %}summary_large_image{% endblock %}
 {% block twitter_title %}📖 {{ post.title }}{% endblock %}
 {% block twitter_description %}Read this blog post by {{ post.author.get_full_name|default:post.author.username }}} about real estate trends and insights from Gorkha Real Estate.{% endblock %}
-{% block twitter_image %}{% if post.image %}{{ post.image.url }}{% else %}{% static 'images/logo.jpeg' %}{% endif %}{% endblock %}
+{% block twitter_image %}{% if post.image %}{{ post.image.url }}{% else %}{% static 'logo.png' %}{% endif %}{% endblock %}
 
 {% block content %}
     <div class="blog-post" style="max-width: 900px; margin: 0 auto; padding: 20px;">

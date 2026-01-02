@@ -1,0 +1,167 @@
+{% extends "accounts/normal_admin/base.html" %}
+{% load static %}
+
+{% block title %}Properties Management - Normal Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">Properties Management</h1>
+            <p class="text-muted">Approve or reject property listings</p>
+        </div>
+        <div class="d-flex gap-2">
+            <span class="badge bg-warning">Pending: {{ properties|length }}</span>
+            {% if can_approve %}
+            <span class="badge bg-success">Approval Rights: Yes</span>
+            {% else %}
+            <span class="badge bg-secondary">Approval Rights: No</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Properties Table -->
+    <div class="card shadow">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Property Listings</h6>
+        </div>
+        <div class="card-body">
+            {% if properties %}
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="propertiesTable">
+                        <thead>
+                            <tr>
+                                <th>Image</th>
+                                <th>Title</th>
+                                <th>Agent</th>
+                                <th>Price</th>
+                                <th>Location</th>
+                                <th>Status</th>
+                                <th>Posted</th>
+                                {% if can_approve %}
+                                <th>Actions</th>
+                                {% endif %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for property in properties %}
+                            <tr>
+                                <td>
+                                    {% if property.images.first %}
+                                        <img src="{{ property.images.first.image.url }}" alt="Property"
+                                             style="width: 60px; height: 45px; object-fit: cover; border-radius: 4px;">
+                                    {% else %}
+                                        <div style="width: 60px; height: 45px; background: #f8f9fa; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                                            <i class="fas fa-home text-muted"></i>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <strong>{{ property.title|truncatechars:30 }}</strong>
+                                    <br><small class="text-muted">{{ property.property_type }}</small>
+                                </td>
+                                <td>
+                                    {% if property.user %}
+                                        {{ property.user.get_full_name|default:property.user.username }}
+                                    {% else %}
+                                        <span class="text-muted">No Agent</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <strong>NPR {{ property.price|floatformat:0 }}</strong>
+                                    {% if property.price_per_sqft %}
+                                        <br><small class="text-muted">{{ property.price_per_sqft }}/sqft</small>
+                                    {% endif %}
+                                </td>
+                                <td>{{ property.location }}</td>
+                                <td>
+                                    {% if property.is_verified %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check-circle"></i> Verified
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-clock"></i> Unverified
+                                        </span>
+                                    {% endif %}
+                                    <br><small class="text-muted">{{ property.get_status_display }}</small>
+                                </td>
+                                <td>{{ property.created_at|date:"M d, Y" }}</td>
+                                {% if can_approve %}
+                                <td>
+                                    {% if not property.is_verified %}
+                                        <form method="post" style="display: inline;" onsubmit="return confirm('Are you sure you want to verify this property?')">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="property_id" value="{{ property.id }}">
+                                            <input type="hidden" name="action" value="approve">
+                                            <button type="submit" class="btn btn-success btn-sm">
+                                                <i class="fas fa-check"></i> Verify
+                                            </button>
+                                        </form>
+                                        <form method="post" style="display: inline;" onsubmit="return confirm('Are you sure you want to reject this property?')">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="property_id" value="{{ property.id }}">
+                                            <input type="hidden" name="action" value="reject">
+                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                <i class="fas fa-times"></i> Reject
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                        <span class="text-muted">Already verified</span>
+                                    {% endif %}
+                                </td>
+                                {% endif %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-home fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No Properties Found</h5>
+                    <p class="text-muted">There are no properties that you can manage at this time.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Instructions -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-left-info">
+                <div class="card-body">
+                    <h6 class="card-title"><i class="fas fa-info-circle text-info"></i> Instructions</h6>
+                    <ul class="mb-0">
+                        <li>You can only manage properties assigned to you or pending approval</li>
+                        <li>Click "Approve" to make a property visible to users</li>
+                        <li>Click "Reject" to remove a property from the platform</li>
+                        <li>All your actions are logged for Super Admin monitoring</li>
+                        {% if not can_approve %}
+                        <li><strong>Note:</strong> You currently don't have approval rights. Contact Super Admin.</li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Initialize DataTable
+$(document).ready(function() {
+    $('#propertiesTable').DataTable({
+        "pageLength": 25,
+        "ordering": true,
+        "searching": true,
+        "responsive": true,
+        "language": {
+            "search": "Search properties:",
+            "lengthMenu": "Show _MENU_ properties per page",
+            "info": "Showing _START_ to _END_ of _TOTAL_ properties"
+        }
+    });
+});
+</script>
+{% endblock %}

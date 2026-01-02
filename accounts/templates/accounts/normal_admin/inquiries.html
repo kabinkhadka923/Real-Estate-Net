@@ -1,0 +1,207 @@
+{% extends "accounts/normal_admin/base.html" %}
+{% load static %}
+
+{% block title %}Inquiries Management - Normal Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">Inquiries Management</h1>
+            <p class="text-muted">Handle and resolve customer inquiries</p>
+        </div>
+        <div class="d-flex gap-2">
+            <span class="badge bg-warning">Total Inquiries: {{ inquiries|length }}</span>
+            <span class="badge bg-success">Resolved: {{ inquiries|length|add:inquiries.count }}</span>
+        </div>
+    </div>
+
+    <!-- Inquiries Table -->
+    <div class="card shadow">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Customer Inquiries</h6>
+        </div>
+        <div class="card-body">
+            {% if inquiries %}
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="inquiriesTable">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Subject</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Submitted</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for inquiry in inquiries %}
+                            <tr>
+                                <td>
+                                    <strong>{{ inquiry.name }}</strong>
+                                    {% if inquiry.phone %}
+                                        <br><small class="text-muted">{{ inquiry.phone }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>{{ inquiry.email }}</td>
+                                <td>
+                                    <strong>{{ inquiry.subject|default:"No Subject"|truncatechars:30 }}</strong>
+                                    {% if inquiry.property %}
+                                        <br><small class="text-muted">Property: {{ inquiry.property.title|truncatechars:25 }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if inquiry.inquiry_type == 'general' %}secondary{% elif inquiry.inquiry_type == 'property' %}primary{% elif inquiry.inquiry_type == 'support' %}info{% else %}warning{% endif %}">
+                                        {{ inquiry.get_inquiry_type_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if inquiry.is_resolved %}
+                                        <span class="badge bg-success">Resolved</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ inquiry.submitted_at|date:"M d, Y H:i" }}</td>
+                                <td>
+                                    {% if not inquiry.is_resolved %}
+                                        <form method="post" style="display: inline;" onsubmit="return confirm('Are you sure you want to mark this inquiry as resolved?')">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="inquiry_id" value="{{ inquiry.id }}">
+                                            <input type="hidden" name="action" value="resolve">
+                                            <button type="submit" class="btn btn-success btn-sm">
+                                                <i class="fas fa-check"></i> Resolve
+                                            </button>
+                                        </form>
+                                        <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#inquiryModal{{ inquiry.id }}">
+                                            <i class="fas fa-eye"></i> View
+                                        </button>
+                                    {% else %}
+                                        <span class="text-muted">Resolved</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-envelope fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No Inquiries Found</h5>
+                    <p class="text-muted">There are no customer inquiries to manage at this time.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Inquiry Detail Modals -->
+    {% for inquiry in inquiries %}
+    <div class="modal fade" id="inquiryModal{{ inquiry.id }}" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Inquiry Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Contact Information</h6>
+                            <p><strong>Name:</strong> {{ inquiry.name }}</p>
+                            <p><strong>Email:</strong> {{ inquiry.email }}</p>
+                            <p><strong>Phone:</strong> {{ inquiry.phone|default:"Not provided" }}</p>
+                            <p><strong>Type:</strong> {{ inquiry.get_inquiry_type_display }}</p>
+                            <p><strong>Status:</strong>
+                                {% if inquiry.is_resolved %}
+                                    <span class="badge bg-success">Resolved</span>
+                                {% else %}
+                                    <span class="badge bg-warning">Pending</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Inquiry Details</h6>
+                            <p><strong>Subject:</strong> {{ inquiry.subject|default:"No Subject" }}</p>
+                            <p><strong>Submitted:</strong> {{ inquiry.submitted_at|date:"M d, Y H:i" }}</p>
+                            {% if inquiry.property %}
+                                <p><strong>Related Property:</strong> {{ inquiry.property.title }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <h6>Message</h6>
+                            <div class="border p-3 bg-light">
+                                {{ inquiry.message|linebreaks }}
+                            </div>
+                        </div>
+                    </div>
+                    {% if inquiry.admin_notes %}
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <h6>Admin Notes</h6>
+                            <div class="border p-3 bg-info bg-opacity-10">
+                                {{ inquiry.admin_notes|linebreaks }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    {% if not inquiry.is_resolved %}
+                        <form method="post" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="inquiry_id" value="{{ inquiry.id }}">
+                            <input type="hidden" name="action" value="resolve">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check"></i> Mark as Resolved
+                            </button>
+                        </form>
+                    {% endif %}
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <!-- Instructions -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-left-info">
+                <div class="card-body">
+                    <h6 class="card-title"><i class="fas fa-info-circle text-info"></i> Inquiry Management Guidelines</h6>
+                    <ul class="mb-0">
+                        <li>Review inquiry details by clicking the "View" button</li>
+                        <li>Mark inquiries as resolved once you've addressed them</li>
+                        <li>All inquiry resolutions are logged for tracking</li>
+                        <li>Contact customers directly using the provided email/phone</li>
+                        <li>Complex inquiries may need Super Admin assistance</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Initialize DataTable
+$(document).ready(function() {
+    $('#inquiriesTable').DataTable({
+        "pageLength": 25,
+        "ordering": true,
+        "searching": true,
+        "responsive": true,
+        "language": {
+            "search": "Search inquiries:",
+            "lengthMenu": "Show _MENU_ inquiries per page",
+            "info": "Showing _START_ to _END_ of _TOTAL_ inquiries"
+        }
+    });
+});
+</script>
+{% endblock %}

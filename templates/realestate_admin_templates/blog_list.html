@@ -1,0 +1,289 @@
+{% extends "realestate_admin_templates/base_admin.html" %}
+{% load static %}
+
+{% block title %}Blog Management - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">📝 Blog Management</h1>
+            <p class="text-muted">Manage blog posts and content</p>
+        </div>
+        <div class="text-end">
+            <a href="#" class="btn btn-primary" onclick="alert('Add new blog post functionality coming soon!')">
+                <i class="fas fa-plus me-2"></i>Add New Post
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Posts</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_posts }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-file-alt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Published</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ published_posts }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Drafts</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ draft_posts }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-edit fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                This Month</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {% for post in posts %}
+                                    {% if post.created_at|date:"Y-m" == "now"|date:"Y-m" %}
+                                        1{% else %}0{% endif %}
+                                {% empty %}0{% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Blog Posts List -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-blog me-2"></i>Blog Posts
+            </h6>
+        </div>
+        <div class="card-body">
+            {% if posts %}
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="blogTable" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Author</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Views</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for post in posts %}
+                            <tr>
+                                <td>
+                                    <div>
+                                        <div class="fw-bold text-primary">{{ post.title }}</div>
+                                        <small class="text-muted">{{ post.excerpt|truncatechars:100 }}</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ post.author.get_full_name|default:post.author.username }}</span>
+                                </td>
+                                <td>
+                                    {% if post.is_published %}
+                                        <span class="badge bg-success">Published</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Draft</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small>{{ post.created_at|date:"M d, Y" }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ post.views|default:0 }}</span>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <button class="btn btn-sm btn-outline-primary" onclick="viewPost({{ post.id }})">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-warning" onclick="editPost({{ post.id }})">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        {% if post.is_published %}
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="unpublishPost({{ post.id }})">
+                                            <i class="fas fa-eye-slash"></i>
+                                        </button>
+                                        {% else %}
+                                        <button class="btn btn-sm btn-outline-success" onclick="publishPost({{ post.id }})">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        {% endif %}
+                                        <button class="btn btn-sm btn-outline-danger" onclick="deletePost({{ post.id }})">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-blog fa-4x text-gray-300 mb-3"></i>
+                    <h5 class="text-muted">No Blog Posts Found</h5>
+                    <p class="text-muted">No blog posts have been created yet.</p>
+                    <a href="#" class="btn btn-primary" onclick="alert('Add new blog post functionality coming soon!')">
+                        <i class="fas fa-plus me-2"></i>Create First Post
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Post View Modal -->
+<div class="modal fade" id="postViewModal" tabindex="-1" aria-labelledby="postViewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="postViewModalLabel">Blog Post</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="postViewContent">
+                <!-- Content will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Initialize DataTable
+$(document).ready(function() {
+    $('#blogTable').DataTable({
+        "pageLength": 25,
+        "ordering": true,
+        "searching": true,
+        "paging": true,
+        "info": true,
+        "responsive": true,
+        "language": {
+            "search": "Search posts:",
+            "lengthMenu": "Show _MENU_ posts per page",
+            "info": "Showing _START_ to _END_ of _TOTAL_ posts"
+        }
+    });
+});
+
+// View post
+function viewPost(postId) {
+    $('#postViewModalLabel').text('Loading...');
+    $('#postViewContent').html(`
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading post...</p>
+        </div>
+    `);
+    $('#postViewModal').modal('show');
+
+    // Simulate loading (replace with actual AJAX call)
+    setTimeout(() => {
+        $('#postViewContent').html(`
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                Post viewing functionality coming soon. Post ID: ${postId}
+            </div>
+            <p class="text-muted">This feature will display the full blog post content with formatting.</p>
+        `);
+    }, 1000);
+}
+
+// Edit post
+function editPost(postId) {
+    alert('Edit post functionality coming soon! Post ID: ' + postId);
+}
+
+// Publish post
+function publishPost(postId) {
+    if (confirm('Are you sure you want to publish this post?')) {
+        alert('Publish functionality coming soon! Post ID: ' + postId);
+    }
+}
+
+// Unpublish post
+function unpublishPost(postId) {
+    if (confirm('Are you sure you want to unpublish this post?')) {
+        alert('Unpublish functionality coming soon! Post ID: ' + postId);
+    }
+}
+
+// Delete post
+function deletePost(postId) {
+    if (confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
+        alert('Delete functionality coming soon! Post ID: ' + postId);
+    }
+}
+</script>
+
+<style>
+.table th {
+    background-color: #f8f9fa;
+    border-top: 2px solid #dee2e6;
+    font-weight: 600;
+}
+
+.badge {
+    font-size: 0.75em;
+}
+
+.btn-group .btn {
+    margin-right: 2px;
+}
+
+.modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+</style>
+{% endblock %}
