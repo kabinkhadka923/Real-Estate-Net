@@ -46,6 +46,13 @@ A modern real estate platform built with Django for property listings, user mana
    ```
 
 Visit `http://127.0.0.1:8000` to access the website!
+<img width="1919" height="1079" alt="Screenshot 2026-01-02 205540" src="https://github.com/user-attachments/assets/30c0d449-2a72-4a75-8c48-04d6db09d7c9" />
+<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/f69a9a4c-728b-42b0-a3dc-b3fd4276626d" />
+<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/fee4fb71-db22-46db-9d14-de97c83bf917" />
+<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/3709b8c9-042a-40fe-be92-423f830fad4a" />
+<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/bbc14ad0-fc9d-4c0a-a256-067af07c7140" />
+<img width="1919" height="927" alt="Screenshot 2026-01-02 210323" src="https://github.com/user-attachments/assets/c72b7f39-0ea9-41c1-ae16-deda55189050" />
+
 
 ## ✨ Features
 
