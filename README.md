@@ -1,4 +1,4 @@
-# 🏠 Gorkha Real Estate
+# 🏠 Real Estate Net
 
 A modern real estate platform built with Django for property listings, user management, and premium services.
 
